@@ -1,0 +1,195 @@
+/* =========================================
+   ROCKYX — ONE WORLD. ONE PLATFORM.
+   Global design system
+   ========================================= */
+:root {
+  --rx-bg: #080808;
+  --rx-surface: #141414;
+  --rx-surface-light: #202020;
+  --rx-gold: #f5c542;
+  --rx-gold-dark: #d9a91b;
+  --rx-text: #ffffff;
+  --rx-text-muted: #a5a5a5;
+  --rx-border: #303030;
+  --rx-radius-sm: 8px;
+  --rx-radius-md: 14px;
+  --rx-radius-lg: 22px;
+  --rx-content-width: 1200px;
+  --rx-header-height: 64px;
+  --rx-transition: 180ms ease;
+}
+/* Reset */
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--rx-bg);
+  color: var(--rx-text);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--rx-gold);
+  outline-offset: 3px;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+/* Reusable layout */
+.rx-container {
+  width: min(100% - 32px, var(--rx-content-width));
+  margin-inline: auto;
+}
+.rx-hidden {
+  display: none !important;
+}
+/* Buttons */
+.rx-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--rx-radius-sm);
+  font-weight: 700;
+  transition:
+    background var(--rx-transition),
+    transform var(--rx-transition);
+}
+.rx-button:active {
+  transform: scale(0.97);
+}
+.rx-button-primary {
+  background: var(--rx-gold);
+  color: #111111;
+}
+.rx-button-primary:hover {
+  background: var(--rx-gold-dark);
+}
+.rx-button-secondary {
+  background: var(--rx-surface-light);
+  border-color: var(--rx-border);
+  color: var(--rx-text);
+}
+/* Cards */
+.rx-card {
+  background: var(--rx-surface);
+  border: 1px solid var(--rx-border);
+  border-radius: var(--rx-radius-md);
+  overflow: hidden;
+}
+/* Text */
+.rx-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 800;
+}
+.rx-muted {
+  color: var(--rx-text-muted);
+}
+/* Header */
+.rx-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  min-height: var(--rx-header-height);
+  background: rgba(8, 8, 8, 0.96);
+  border-bottom: 1px solid var(--rx-border);
+  backdrop-filter: blur(12px);
+}
+.rx-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--rx-header-height);
+}
+.rx-logo {
+  color: var(--rx-gold);
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+/* Main content */
+.rx-main {
+  padding-block: 24px 100px;
+}
+/* Mobile navigation */
+.rx-bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+  padding: 10px 6px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(12, 12, 12, 0.97);
+  border-top: 1px solid var(--rx-border);
+}
+.rx-nav-item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 2px;
+  background: transparent;
+  border: 0;
+  color: var(--rx-text-muted);
+  font-size: 0.72rem;
+}
+.rx-nav-item.is-active {
+  color: var(--rx-gold);
+}
+/* Desktop improvements */
+@media (min-width: 768px) {
+  .rx-main {
+    padding-bottom: 40px;
+  }
+  .rx-bottom-nav {
+    position: static;
+    justify-content: center;
+    border-top: 0;
+    border-bottom: 1px solid var(--rx-border);
+  }
+  .rx-nav-item {
+    flex: 0 1 120px;
+  }
+}
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
