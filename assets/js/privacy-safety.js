@@ -1,6 +1,6 @@
 /* =========================================
    ROCKYX PRIVACY & SAFETY
-   Local prototype for privacy and moderation
+   Privacy preferences and user controls
    ========================================= */
 
 (function () {
@@ -8,338 +8,435 @@
 
   const STORAGE_KEY = "rockyx_privacy_safety";
 
+  const DEFAULT_SETTINGS = {
+    profileVisibility: "public",
+    messaging: "everyone",
+    comments: "everyone",
+    mentions: "everyone",
+    activityVisibility: "followers",
+    showOnlineStatus: true,
+    allowTagging: true,
+    allowPersonalizedRecommendations: true
+  };
+
+  const VISIBILITY_OPTIONS = [
+    "public",
+    "private"
+  ];
+
+  const AUDIENCE_OPTIONS = [
+    "everyone",
+    "followers",
+    "nobody"
+  ];
+
   function loadData() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
 
-      if (!saved) {
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
         return {
+          settings: {},
           blockedUsers: [],
           mutedUsers: [],
-          reports: [],
-          hiddenContent: [],
-          settings: {
-            filterSensitiveContent: true,
-            allowTagging: true
-          }
+          hiddenContent: []
         };
       }
 
-      const data = JSON.parse(saved);
-
       return {
+        settings: data.settings || {},
         blockedUsers: Array.isArray(data.blockedUsers)
           ? data.blockedUsers
           : [],
         mutedUsers: Array.isArray(data.mutedUsers)
           ? data.mutedUsers
           : [],
-        reports: Array.isArray(data.reports)
-          ? data.reports
-          : [],
         hiddenContent: Array.isArray(data.hiddenContent)
           ? data.hiddenContent
-          : [],
-        settings: {
-          filterSensitiveContent: true,
-          allowTagging: true,
-          ...(data.settings || {})
-        }
+          : []
       };
     } catch (error) {
-      console.error("RockyX privacy data could not be loaded:", error);
-
       return {
+        settings: {},
         blockedUsers: [],
         mutedUsers: [],
-        reports: [],
-        hiddenContent: [],
-        settings: {
-          filterSensitiveContent: true,
-          allowTagging: true
-        }
+        hiddenContent: []
       };
     }
   }
 
   function saveData(data) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-      window.dispatchEvent(
-        new CustomEvent("rockyx:privacy-updated", {
-          detail: {
-            blockedUsers: data.blockedUsers.length,
-            mutedUsers: data.mutedUsers.length,
-            reports: data.reports.length
-          }
-        })
-      );
-
-      return true;
-    } catch (error) {
-      console.error("RockyX privacy data could not be saved:", error);
-      return false;
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  function normalizeId(id) {
-    if (typeof id !== "string" && typeof id !== "number") {
-      return null;
+  function getCurrentUser() {
+    if (window.RockyXUserAccounts) {
+      return window.RockyXUserAccounts.getCurrentUser();
     }
 
-    const normalized = String(id).trim();
-
-    return normalized ? normalized : null;
+    return null;
   }
 
-  function blockUser(userId) {
-    const id = normalizeId(userId);
-    if (!id) return false;
+  function resolveUserId(userId) {
+    if (userId) {
+      return String(userId);
+    }
+
+    const user = getCurrentUser();
+
+    return user && user.id ? String(user.id) : null;
+  }
+
+  function getSettings(userId) {
+    userId = resolveUserId(userId);
+
+    if (!userId) {
+      return Object.assign({}, DEFAULT_SETTINGS);
+    }
 
     const data = loadData();
 
-    if (data.blockedUsers.includes(id)) {
-      return true;
-    }
-
-    data.blockedUsers.push(id);
-    return saveData(data);
-  }
-
-  function unblockUser(userId) {
-    const id = normalizeId(userId);
-    if (!id) return false;
-
-    const data = loadData();
-
-    data.blockedUsers = data.blockedUsers.filter(
-      user => user !== id
+    return Object.assign(
+      {},
+      DEFAULT_SETTINGS,
+      data.settings[userId] || {}
     );
-
-    return saveData(data);
   }
 
-  function muteUser(userId) {
-    const id = normalizeId(userId);
-    if (!id) return false;
+  function updateSettings(updates, userId) {
+    userId = resolveUserId(userId);
 
-    const data = loadData();
-
-    if (data.mutedUsers.includes(id)) {
-      return true;
-    }
-
-    data.mutedUsers.push(id);
-    return saveData(data);
-  }
-
-  function unmuteUser(userId) {
-    const id = normalizeId(userId);
-    if (!id) return false;
-
-    const data = loadData();
-
-    data.mutedUsers = data.mutedUsers.filter(
-      user => user !== id
-    );
-
-    return saveData(data);
-  }
-
-  function isBlocked(userId) {
-    const id = normalizeId(userId);
-    if (!id) return false;
-
-    return loadData().blockedUsers.includes(id);
-  }
-
-  function isMuted(userId) {
-    const id = normalizeId(userId);
-    if (!id) return false;
-
-    return loadData().mutedUsers.includes(id);
-  }
-
-  function getBlockedUsers() {
-    return [...loadData().blockedUsers];
-  }
-
-  function getMutedUsers() {
-    return [...loadData().mutedUsers];
-  }
-
-  function hideContent(contentId) {
-    const id = normalizeId(contentId);
-    if (!id) return false;
-
-    const data = loadData();
-
-    if (data.hiddenContent.includes(id)) {
-      return true;
-    }
-
-    data.hiddenContent.push(id);
-    return saveData(data);
-  }
-
-  function unhideContent(contentId) {
-    const id = normalizeId(contentId);
-    if (!id) return false;
-
-    const data = loadData();
-
-    data.hiddenContent = data.hiddenContent.filter(
-      content => content !== id
-    );
-
-    return saveData(data);
-  }
-
-  function isContentHidden(contentId) {
-    const id = normalizeId(contentId);
-    if (!id) return false;
-
-    return loadData().hiddenContent.includes(id);
-  }
-
-  function reportContent(details) {
-    if (!details || typeof details !== "object") {
+    if (!userId) {
       return {
         success: false,
-        error: "Report details are required."
+        message: "A user profile is required."
       };
     }
 
-    const targetId = normalizeId(details.targetId);
-    const targetType = details.targetType;
-    const reason = typeof details.reason === "string"
-      ? details.reason.trim()
-      : "";
+    if (!updates || typeof updates !== "object") {
+      return {
+        success: false,
+        message: "Valid settings are required."
+      };
+    }
 
-    const allowedTypes = [
-      "user",
-      "video",
-      "comment",
-      "message",
-      "music",
-      "product",
-      "livestream",
-      "template"
+    const data = loadData();
+    const current = getSettings(userId);
+    const next = Object.assign({}, current);
+
+    const allowedKeys = [
+      "profileVisibility",
+      "messaging",
+      "comments",
+      "mentions",
+      "activityVisibility",
+      "showOnlineStatus",
+      "allowTagging",
+      "allowPersonalizedRecommendations"
     ];
 
-    if (!targetId || !allowedTypes.includes(targetType)) {
-      return {
-        success: false,
-        error: "A valid target and content type are required."
-      };
+    for (const key of Object.keys(updates)) {
+      if (!allowedKeys.includes(key)) {
+        return {
+          success: false,
+          message: "Unsupported privacy setting: " + key
+        };
+      }
+
+      const value = updates[key];
+
+      if (
+        key === "profileVisibility" &&
+        !VISIBILITY_OPTIONS.includes(value)
+      ) {
+        return {
+          success: false,
+          message: "Invalid profile visibility."
+        };
+      }
+
+      if (
+        [
+          "messaging",
+          "comments",
+          "mentions",
+          "activityVisibility"
+        ].includes(key) &&
+        !AUDIENCE_OPTIONS.includes(value)
+      ) {
+        return {
+          success: false,
+          message: "Invalid audience setting for " + key
+        };
+      }
+
+      if (
+        [
+          "showOnlineStatus",
+          "allowTagging",
+          "allowPersonalizedRecommendations"
+        ].includes(key) &&
+        typeof value !== "boolean"
+      ) {
+        return {
+          success: false,
+          message: key + " must be true or false."
+        };
+      }
+
+      next[key] = value;
     }
 
-    if (!reason || reason.length > 500) {
-      return {
-        success: false,
-        error: "Provide a reason of up to 500 characters."
-      };
-    }
-
-    const data = loadData();
-
-    const report = {
-      id: createId(),
-      targetId,
-      targetType,
-      reason,
-      details: typeof details.details === "string"
-        ? details.details.trim().slice(0, 1000)
-        : "",
-      status: "pending",
-      createdAt: new Date().toISOString()
-    };
-
-    data.reports.push(report);
-
-    if (!saveData(data)) {
-      return {
-        success: false,
-        error: "The report could not be saved."
-      };
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("rockyx:report-created", {
-        detail: { ...report }
-      })
-    );
+    data.settings[userId] = next;
+    saveData(data);
 
     return {
       success: true,
-      report: { ...report }
+      settings: next
     };
   }
 
-  function createId() {
-    if (
-      window.crypto &&
-      typeof window.crypto.randomUUID === "function"
-    ) {
-      return window.crypto.randomUUID();
+  function resetSettings(userId) {
+    userId = resolveUserId(userId);
+
+    if (!userId) {
+      return {
+        success: false,
+        message: "A user profile is required."
+      };
     }
 
-    return "report-" +
-      Date.now() +
-      "-" +
-      Math.random().toString(36).slice(2, 10);
+    const data = loadData();
+    data.settings[userId] = Object.assign({}, DEFAULT_SETTINGS);
+    saveData(data);
+
+    return {
+      success: true,
+      settings: data.settings[userId]
+    };
   }
 
-  function getReports() {
-    return loadData().reports.map(report => ({ ...report }));
-  }
+  function addToList(listName, targetUserId, userId) {
+    userId = resolveUserId(userId);
+    targetUserId = String(targetUserId || "");
 
-  function updateSettings(changes) {
-    if (
-      !changes ||
-      typeof changes !== "object" ||
-      Array.isArray(changes)
-    ) {
-      return false;
+    if (!userId || !targetUserId) {
+      return {
+        success: false,
+        message: "Both user IDs are required."
+      };
     }
 
-    const allowedKeys = [
-      "filterSensitiveContent",
-      "allowTagging"
-    ];
+    if (userId === targetUserId) {
+      return {
+        success: false,
+        message: "You cannot add your own account."
+      };
+    }
 
     const data = loadData();
 
-    for (const key of allowedKeys) {
-      if (typeof changes[key] === "boolean") {
-        data.settings[key] = changes[key];
-      }
+    if (!data[listName][userId]) {
+      data[listName][userId] = [];
     }
 
-    return saveData(data);
+    if (!data[listName][userId].includes(targetUserId)) {
+      data[listName][userId].push(targetUserId);
+    }
+
+    saveData(data);
+
+    return {
+      success: true,
+      users: data[listName][userId]
+    };
   }
 
-  function getSettings() {
-    return { ...loadData().settings };
+  function removeFromList(listName, targetUserId, userId) {
+    userId = resolveUserId(userId);
+    targetUserId = String(targetUserId || "");
+
+    if (!userId || !targetUserId) {
+      return {
+        success: false,
+        message: "Both user IDs are required."
+      };
+    }
+
+    const data = loadData();
+
+    if (!data[listName][userId]) {
+      data[listName][userId] = [];
+    }
+
+    data[listName][userId] =
+      data[listName][userId].filter(function (id) {
+        return id !== targetUserId;
+      });
+
+    saveData(data);
+
+    return {
+      success: true,
+      users: data[listName][userId]
+    };
+  }
+
+  function getList(listName, userId) {
+    userId = resolveUserId(userId);
+
+    if (!userId) {
+      return [];
+    }
+
+    const data = loadData();
+
+    return Array.isArray(data[listName][userId])
+      ? data[listName][userId].slice()
+      : [];
+  }
+
+  function blockUser(targetUserId, userId) {
+    return addToList("blockedUsers", targetUserId, userId);
+  }
+
+  function unblockUser(targetUserId, userId) {
+    return removeFromList("blockedUsers", targetUserId, userId);
+  }
+
+  function getBlockedUsers(userId) {
+    return getList("blockedUsers", userId);
+  }
+
+  function isBlocked(targetUserId, userId) {
+    return getBlockedUsers(userId).includes(String(targetUserId));
+  }
+
+  function muteUser(targetUserId, userId) {
+    return addToList("mutedUsers", targetUserId, userId);
+  }
+
+  function unmuteUser(targetUserId, userId) {
+    return removeFromList("mutedUsers", targetUserId, userId);
+  }
+
+  function getMutedUsers(userId) {
+    return getList("mutedUsers", userId);
+  }
+
+  function hideContent(contentType, contentId, userId) {
+    userId = resolveUserId(userId);
+
+    contentType = String(contentType || "");
+    contentId = String(contentId || "");
+
+    if (!userId || !contentType || !contentId) {
+      return {
+        success: false,
+        message: "User ID, content type, and content ID are required."
+      };
+    }
+
+    const data = loadData();
+
+    const exists = data.hiddenContent.some(function (item) {
+      return (
+        item.userId === userId &&
+        item.contentType === contentType &&
+        item.contentId === contentId
+      );
+    });
+
+    if (!exists) {
+      data.hiddenContent.push({
+        userId: userId,
+        contentType: contentType,
+        contentId: contentId,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    saveData(data);
+
+    return {
+      success: true,
+      message: "Content hidden in this browser."
+    };
+  }
+
+  function unhideContent(contentType, contentId, userId) {
+    userId = resolveUserId(userId);
+
+    const data = loadData();
+
+    data.hiddenContent = data.hiddenContent.filter(function (item) {
+      return !(
+        item.userId === userId &&
+        item.contentType === String(contentType) &&
+        item.contentId === String(contentId)
+      );
+    });
+
+    saveData(data);
+
+    return {
+      success: true
+    };
+  }
+
+  function isContentHidden(contentType, contentId, userId) {
+    userId = resolveUserId(userId);
+
+    if (!userId) {
+      return false;
+    }
+
+    return loadData().hiddenContent.some(function (item) {
+      return (
+        item.userId === userId &&
+        item.contentType === String(contentType) &&
+        item.contentId === String(contentId)
+      );
+    });
+  }
+
+  function getHiddenContent(userId) {
+    userId = resolveUserId(userId);
+
+    if (!userId) {
+      return [];
+    }
+
+    return loadData().hiddenContent.filter(function (item) {
+      return item.userId === userId;
+    });
+  }
+
+  function getAudienceOptions() {
+    return AUDIENCE_OPTIONS.slice();
+  }
+
+  function getVisibilityOptions() {
+    return VISIBILITY_OPTIONS.slice();
   }
 
   window.RockyXPrivacySafety = {
-    blockUser,
-    unblockUser,
-    muteUser,
-    unmuteUser,
-    isBlocked,
-    isMuted,
-    getBlockedUsers,
-    getMutedUsers,
-    hideContent,
-    unhideContent,
-    isContentHidden,
-    reportContent,
-    getReports,
-    updateSettings,
-    getSettings
+    getSettings: getSettings,
+    updateSettings: updateSettings,
+    resetSettings: resetSettings,
+    blockUser: blockUser,
+    unblockUser: unblockUser,
+    getBlockedUsers: getBlockedUsers,
+    isBlocked: isBlocked,
+    muteUser: muteUser,
+    unmuteUser: unmuteUser,
+    getMutedUsers: getMutedUsers,
+    hideContent: hideContent,
+    unhideContent: unhideContent,
+    isContentHidden: isContentHidden,
+    getHiddenContent: getHiddenContent,
+    getAudienceOptions: getAudienceOptions,
+    getVisibilityOptions: getVisibilityOptions
   };
 
 })();
