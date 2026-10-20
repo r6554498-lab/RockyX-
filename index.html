@@ -5,254 +5,1044 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080808">
 <title>RockyX — One World. One Platform.</title>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--gold:#f5c542;--bg:#080808}
-body{background:var(--bg);color:#fff;font-family:Arial,sans-serif}
-button{font:inherit;color:inherit;cursor:pointer}
-.app{height:100dvh;display:flex;overflow:hidden}
-.sidebar{width:210px;flex-shrink:0;padding:25px 15px;border-right:1px solid #292929}
-.logo{color:var(--gold);font-size:30px;font-weight:900;margin-bottom:35px}
-.logo small{display:block;color:#aaa;font-size:10px;letter-spacing:2px;margin-top:5px}
-.nav{display:block;width:100%;padding:15px 10px;margin-bottom:8px;background:none;border:0;border-radius:8px;text-align:left}
-.nav.active,.nav:hover{background:#222;color:var(--gold)}
-.main{flex:1;min-width:0;display:flex;justify-content:center;position:relative}
-.feed{width:min(100%,480px);height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
-.feed::-webkit-scrollbar{display:none}
-.card{height:100%;height:100dvh;min-height:420px;position:relative;overflow:hidden;scroll-snap-align:start;background:#171717;isolation:isolate}
-.card video,.poster,.shade{position:absolute;inset:0;width:100%;height:100%}
-.card video{object-fit:cover;z-index:-2}
-.poster{z-index:-1;display:grid;place-items:center;text-align:center;padding:28px;background:radial-gradient(ellipse at 60% 30%,#55421c,transparent 55%),linear-gradient(145deg,#151515,#302a1c,#090909)}
-.poster.blue{background:radial-gradient(ellipse at 40% 35%,#37445c,transparent 55%),linear-gradient(145deg,#101522,#252d3b,#090909)}
-.poster.pink{background:radial-gradient(ellipse at 60% 35%,#572b43,transparent 55%),linear-gradient(145deg,#25131e,#432238,#090909)}
-.poster h2{font-size:42px;line-height:1.1;margin:18px 0}
-.poster p{line-height:1.7;color:#eee}
-.poster .symbol{font-size:65px}
-.shade{z-index:-1;pointer-events:none;background:linear-gradient(to bottom,#0005,transparent 25%,transparent 45%,#000c)}
-.tabs{position:absolute;top:max(14px,env(safe-area-inset-top));left:0;right:0;z-index:3;display:flex;justify-content:center;gap:23px}
-.tabs button{background:none;border:0;padding:10px 0;color:#ddd;font-weight:bold}
-.tabs button.active{border-bottom:3px solid var(--gold);color:#fff}
-.info{position:absolute;z-index:2;left:15px;right:78px;bottom:calc(25px + env(safe-area-inset-bottom))}
-.creator{display:flex;align-items:center;gap:9px;margin-bottom:12px;font-weight:bold}
-.avatar{width:37px;height:37px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#111}
-.follow{border:0;border-radius:5px;background:var(--gold);color:#111;font-size:12px;font-weight:bold;padding:7px}
-.caption{font-size:14px;line-height:1.5;margin-bottom:10px}
-.music{font-size:12px;margin-bottom:12px}
-.playhint{font-size:11px;color:#ddd}
-.actions{position:absolute;right:9px;bottom:calc(125px + env(safe-area-inset-bottom));z-index:4;display:flex;flex-direction:column;gap:17px;align-items:center}
-.action{background:none;border:0;min-width:50px;display:flex;flex-direction:column;align-items:center;gap:4px;text-shadow:0 1px 4px #000}
-.icon{font-size:28px}
-.count{font-size:11px;font-weight:bold}
-.action.liked{color:#ff4967}
-.action.download{color:var(--gold)}
-.bottom{display:none}
-.toast{position:fixed;z-index:20;bottom:95px;left:50%;transform:translateX(-50%);background:#282828;border:1px solid #555;border-radius:10px;padding:12px 16px;font-size:13px;text-align:center;width:max-content;max-width:90%}
-@media(max-width:700px){
-.sidebar{display:none}.main{width:100%}.feed{width:100%}
-.bottom{position:fixed;z-index:10;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#090909f5;border-top:1px solid #292929;padding:10px 3px calc(8px + env(safe-area-inset-bottom))}
-.bottom button{border:0;background:none;color:#bbb;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;flex:1}
-.bottom button.active{color:#fff}.bottom .plus{background:var(--gold);color:#111;border-radius:6px;font-size:22px;padding:0 12px}
-.info{bottom:calc(78px + env(safe-area-inset-bottom))}
-.actions{bottom:calc(155px + env(safe-area-inset-bottom))}
+:root {
+  --gold:#f5c542;
+  --bg:#080808;
+  --panel:#151515;
+  --border:#292929;
+  --muted:#aaa;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:var(--bg);
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+button,input { font:inherit; }
+button { color:inherit; cursor:pointer; }
+button:focus-visible,input:focus-visible {
+  outline:2px solid var(--gold);
+  outline-offset:3px;
+}
+button:disabled { opacity:.5; cursor:not-allowed; }
+.app { min-height:100dvh; display:flex; }
+.sidebar {
+  width:205px;
+  flex-shrink:0;
+  padding:24px 13px;
+  border-right:1px solid var(--border);
+}
+.logo {
+  color:var(--gold);
+  font-size:29px;
+  font-weight:900;
+  margin-bottom:25px;
+}
+.logo small {
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  letter-spacing:1.5px;
+  margin-top:5px;
+}
+.nav {
+  display:block;
+  width:100%;
+  padding:14px 10px;
+  margin-bottom:5px;
+  border:0;
+  border-radius:8px;
+  background:none;
+  text-align:left;
+}
+.nav.active,.nav:hover {
+  background:#222;
+  color:var(--gold);
+}
+.main { flex:1; min-width:0; }
+.page { display:none; min-height:100dvh; }
+.page.active { display:block; }
+.page-header {
+  padding:23px 20px 15px;
+  border-bottom:1px solid var(--border);
+}
+.page-header h1 { font-size:25px; }
+.page-header p { color:var(--muted); margin-top:7px; }
+.content { padding:18px; max-width:1050px; margin:auto; }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:12px;
+}
+.panel {
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:16px;
+}
+.panel h3 { margin-bottom:8px; }
+.panel p { color:#bbb; line-height:1.5; font-size:14px; }
+.primary {
+  background:var(--gold);
+  color:#111;
+  border:0;
+  border-radius:8px;
+  padding:11px 14px;
+  font-weight:bold;
+}
+.secondary {
+  background:#252525;
+  border:1px solid #444;
+  border-radius:8px;
+  padding:10px 13px;
+}
+.field {
+  width:100%;
+  padding:12px;
+  background:#111;
+  color:white;
+  border:1px solid #444;
+  border-radius:8px;
+  margin:8px 0;
+}
+.actions-row { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+.empty {
+  padding:22px;
+  color:#bbb;
+  background:#141414;
+  border-radius:10px;
+  line-height:1.6;
+}
+.toast {
+  position:fixed;
+  z-index:50;
+  bottom:85px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:12px 16px;
+  background:#292929;
+  border:1px solid #555;
+  border-radius:10px;
+  width:max-content;
+  max-width:90%;
+  font-size:13px;
+}
+[hidden] { display:none!important; }
+
+/* HOME VIDEO FEED */
+.home-page { height:100dvh; overflow:hidden; }
+.feed-wrap {
+  display:flex;
+  justify-content:center;
+  height:100%;
+  position:relative;
+}
+.feed {
+  width:min(100%,480px);
+  height:100%;
+  overflow-y:auto;
+  scroll-snap-type:y mandatory;
+  scrollbar-width:none;
+}
+.feed::-webkit-scrollbar { display:none; }
+.card {
+  height:100dvh;
+  min-height:420px;
+  position:relative;
+  overflow:hidden;
+  scroll-snap-align:start;
+  background:#171717;
+  isolation:isolate;
+}
+.card video,.poster,.shade {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.card video { object-fit:cover; z-index:-2; }
+.poster {
+  z-index:-1;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  padding:28px;
+  background:
+    radial-gradient(ellipse at 60% 30%,#55421c,transparent 55%),
+    linear-gradient(145deg,#151515,#302a1c,#090909);
+  transition:opacity .25s;
+}
+.poster.blue {
+  background:radial-gradient(ellipse at 40% 35%,#37445c,transparent 55%),
+  linear-gradient(145deg,#101522,#252d3b,#090909);
+}
+.poster.pink {
+  background:radial-gradient(ellipse at 60% 35%,#572b43,transparent 55%),
+  linear-gradient(145deg,#25131e,#432238,#090909);
+}
+.poster h2 { font-size:40px; line-height:1.1; margin:18px 0; }
+.poster p { line-height:1.7; color:#eee; }
+.symbol { font-size:60px; }
+.shade {
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(to bottom,#0005,transparent 25%,transparent 45%,#000c);
+}
+.feed-tabs {
+  position:absolute;
+  z-index:3;
+  top:max(12px,env(safe-area-inset-top));
+  left:0; right:0;
+  display:flex;
+  justify-content:center;
+  gap:22px;
+  pointer-events:none;
+}
+.feed-tabs button {
+  pointer-events:auto;
+  border:0;
+  background:none;
+  padding:10px 0;
+  font-weight:bold;
+  color:#ddd;
+}
+.feed-tabs button.active {
+  color:white;
+  border-bottom:3px solid var(--gold);
+}
+.info {
+  position:absolute;
+  z-index:2;
+  left:14px; right:72px;
+  bottom:calc(24px + env(safe-area-inset-bottom));
+}
+.creator {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:12px;
+  font-weight:bold;
+}
+.avatar {
+  width:36px; height:36px;
+  flex-shrink:0;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--gold);
+  color:#111;
+}
+.follow {
+  background:var(--gold);
+  color:#111;
+  border:0;
+  border-radius:5px;
+  padding:7px;
+  font-size:11px;
+}
+.caption { font-size:14px; line-height:1.5; margin-bottom:10px; }
+.music-line { font-size:12px; margin-bottom:10px; }
+.playhint { font-size:11px; color:#ddd; }
+.actions {
+  position:absolute;
+  z-index:4;
+  right:7px;
+  bottom:calc(125px + env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:15px;
+}
+.action {
+  border:0;
+  background:none;
+  min-width:49px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  text-shadow:0 1px 4px #000;
+}
+.icon { font-size:27px; }
+.count { font-size:11px; font-weight:bold; }
+.action.liked { color:#ff4967; }
+.action.download { color:var(--gold); }
+
+/* EXPLORE MAP */
+#rockyx-explore-map {
+  height:340px;
+  width:100%;
+  background:#202a32;
+  border-radius:12px;
+  overflow:hidden;
+  margin:14px 0;
+}
+.explore-categories {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(125px,1fr));
+  gap:10px;
+  margin-bottom:15px;
+}
+.category-button {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:13px 10px;
+  text-align:left;
+  background:#151515;
+  border:1px solid #333;
+  border-radius:10px;
+}
+.category-button.active {
+  border-color:var(--gold);
+  color:var(--gold);
+}
+.place-card { margin-bottom:10px; }
+.place-card h3 { margin-bottom:7px; }
+.place-card p { margin:5px 0; }
+
+/* BOTTOM NAVIGATION */
+.bottom {
+  display:none;
+}
+@media(max-width:700px) {
+  .sidebar { display:none; }
+  .main { width:100%; }
+  .page:not(.home-page) { padding-bottom:78px; }
+  .home-page { padding-bottom:0!important; }
+  .bottom {
+    position:fixed;
+    z-index:30;
+    bottom:0; left:0; right:0;
+    display:flex;
+    justify-content:space-around;
+    background:#090909f5;
+    border-top:1px solid var(--border);
+    padding:8px 2px calc(7px + env(safe-area-inset-bottom));
+  }
+  .bottom button {
+    flex:1;
+    min-width:0;
+    border:0;
+    background:none;
+    color:#bbb;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    font-size:10px;
+  }
+  .bottom button.active { color:white; }
+  .bottom .nav-icon { font-size:20px; }
+  .bottom .plus {
+    background:var(--gold);
+    color:#111;
+    border-radius:5px;
+    padding:0 10px;
+    font-size:21px;
+  }
+  .info { bottom:calc(76px + env(safe-area-inset-bottom)); }
+  .actions { bottom:calc(150px + env(safe-area-inset-bottom)); }
+  .content { padding:13px; }
+  #rockyx-explore-map { height:320px; }
 }
 </style>
 </head>
+
 <body>
 <div class="app">
+
 <aside class="sidebar">
-<div class="logo">RockyX<small>ONE WORLD. ONE PLATFORM.</small></div>
-<button class="nav active" data-nav="Home">⌂ &nbsp; Home</button>
-<button class="nav" data-nav="Discover">⌕ &nbsp; Discover</button>
-<button class="nav" data-nav="Create">＋ &nbsp; Create</button>
-<button class="nav" data-nav="Inbox">✉ &nbsp; Inbox</button>
-<button class="nav" data-nav="Profile">◉ &nbsp; Profile</button>
+  <div class="logo">RockyX<small>ONE WORLD. ONE PLATFORM.</small></div>
+  <button class="nav active" data-nav="Home">⌂ &nbsp; Home</button>
+  <button class="nav" data-nav="Music">♫ &nbsp; Music</button>
+  <button class="nav" data-nav="Studio">🎬 &nbsp; Studio</button>
+  <button class="nav" data-nav="Marketplace">▣ &nbsp; Marketplace</button>
+  <button class="nav" data-nav="Explore">⌖ &nbsp; Explore</button>
+  <button class="nav" data-nav="Wallet">◈ &nbsp; Wallet & Rewards</button>
+  <button class="nav" data-nav="Profile">◉ &nbsp; Profile</button>
 </aside>
+
 <main class="main">
-<div class="tabs">
-<button data-tab="Following">Following</button>
-<button class="active" data-tab="For You">For You</button>
-</div>
-<section class="feed" id="feed">
-<article class="card">
-<div class="poster"><div><div class="symbol">🌍</div><h2>One World.<br>One Platform.</h2><p>Your creativity. Your community.<br>Your RockyX.</p></div></div>
-<video playsinline loop muted preload="none" data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"></video>
-<div class="shade"></div>
-<div class="info">
-<div class="creator"><div class="avatar">R</div><span>@RockyX</span><button class="follow">Follow</button></div>
-<p class="caption">Welcome to RockyX 🚀 Discover a world of creativity and connection. #RockyX</p>
-<p class="music">♫ Original sound — RockyX</p>
-<p class="playhint">Tap video to play or pause</p>
-</div>
-<div class="actions">
-<button class="action like"><span class="icon">♥</span><span class="count">1.2K</span></button>
-<button class="action comment"><span class="icon">●</span><span class="count">Comment</span></button>
-<button class="action share"><span class="icon">↗</span><span class="count">Share</span></button>
-<button class="action download"><span class="icon">⬇</span><span class="count">Download</span></button>
-</div>
-</article>
-<article class="card">
-<div class="poster blue"><div><div class="symbol">🎬</div><h2>Your story.<br>Your spotlight.</h2><p>Create something worth sharing.</p></div></div>
-<video playsinline loop muted preload="none" data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"></video>
-<div class="shade"></div>
-<div class="info">
-<div class="creator"><div class="avatar">C</div><span>@CreativeWorld</span><button class="follow">Follow</button></div>
-<p class="caption">Every great creator starts somewhere. This is your moment. ✨</p>
-<p class="music">♫ Creator vibes</p><p class="playhint">Tap video to play or pause</p>
-</div>
-<div class="actions">
-<button class="action like"><span class="icon">♥</span><span class="count">856</span></button>
-<button class="action comment"><span class="icon">●</span><span class="count">Comment</span></button>
-<button class="action share"><span class="icon">↗</span><span class="count">Share</span></button>
-<button class="action download"><span class="icon">⬇</span><span class="count">Download</span></button>
-</div>
-</article>
-<article class="card">
-<div class="poster pink"><div><div class="symbol">🎵</div><h2>Feel the sound.</h2><p>Discover artists, new sounds and your next favourite song.</p></div></div>
-<video playsinline loop muted preload="none" data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"></video>
-<div class="shade"></div>
-<div class="info">
-<div class="creator"><div class="avatar">M</div><span>@MusicDiscover</span><button class="follow">Follow</button></div>
-<p class="caption">Your next favourite sound could be one discovery away. 🎧</p>
-<p class="music">♫ Discover new sounds</p><p class="playhint">Tap video to play or pause</p>
-</div>
-<div class="actions">
-<button class="action like"><span class="icon">♥</span><span class="count">492</span></button>
-<button class="action comment"><span class="icon">●</span><span class="count">Comment</span></button>
-<button class="action share"><span class="icon">↗</span><span class="count">Share</span></button>
-<button class="action download"><span class="icon">⬇</span><span class="count">Download</span></button>
-</div>
-</article>
+
+<!-- HOME -->
+<section class="page home-page active" id="page-Home">
+  <div class="feed-wrap">
+    <div class="feed-tabs">
+      <button data-tab="Following">Following</button>
+      <button class="active" data-tab="For You">For You</button>
+    </div>
+
+    <section class="feed" id="feed">
+
+      <article class="card">
+        <div class="poster"><div>
+          <div class="symbol">🌍</div>
+          <h2>One World.<br>One Platform.</h2>
+          <p>Your creativity. Your community.<br>Your RockyX.</p>
+        </div></div>
+        <video playsinline loop muted preload="none"
+          data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"></video>
+        <div class="shade"></div>
+        <div class="info">
+          <div class="creator"><div class="avatar">R</div><span>@RockyX</span><button class="follow">Follow</button></div>
+          <p class="caption">Welcome to RockyX 🚀 Discover a world of creativity and connection. #RockyX</p>
+          <p class="music-line">♫ Original sound — RockyX</p>
+          <p class="playhint">Tap video to play or pause</p>
+        </div>
+        <div class="actions">
+          <button class="action like"><span class="icon">♥</span><span class="count" data-base="1200">1.2K</span></button>
+          <button class="action comment"><span class="icon">●</span><span class="count">Comment</span></button>
+          <button class="action share"><span class="icon">↗</span><span class="count">Share</span></button>
+          <button class="action download"><span class="icon">⬇</span><span class="count">Download</span></button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="poster blue"><div>
+          <div class="symbol">🎬</div><h2>Your story.<br>Your spotlight.</h2>
+          <p>Create something worth sharing.</p>
+        </div></div>
+        <video playsinline loop muted preload="none"
+          data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"></video>
+        <div class="shade"></div>
+        <div class="info">
+          <div class="creator"><div class="avatar">C</div><span>@CreativeWorld</span><button class="follow">Follow</button></div>
+          <p class="caption">Every great creator starts somewhere. This is your moment. ✨</p>
+          <p class="music-line">♫ Creator vibes</p><p class="playhint">Tap video to play or pause</p>
+        </div>
+        <div class="actions">
+          <button class="action like"><span class="icon">♥</span><span class="count" data-base="856">856</span></button>
+          <button class="action comment"><span class="icon">●</span><span class="count">Comment</span></button>
+          <button class="action share"><span class="icon">↗</span><span class="count">Share</span></button>
+          <button class="action download"><span class="icon">⬇</span><span class="count">Download</span></button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="poster pink"><div>
+          <div class="symbol">🎵</div><h2>Feel the sound.</h2>
+          <p>Discover artists, new sounds and your next favourite song.</p>
+        </div></div>
+        <video playsinline loop muted preload="none"
+          data-video="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"></video>
+        <div class="shade"></div>
+        <div class="info">
+          <div class="creator"><div class="avatar">M</div><span>@MusicDiscover</span><button class="follow">Follow</button></div>
+          <p class="caption">Your next favourite sound could be one discovery away. 🎧</p>
+          <p class="music-line">♫ Discover new sounds</p><p class="playhint">Tap video to play or pause</p>
+        </div>
+        <div class="actions">
+          <button class="action like"><span class="icon">♥</span><span class="count" data-base="492">492</span></button>
+          <button class="action comment"><span class="icon">●</span><span class="count">Comment</span></button>
+          <button class="action share"><span class="icon">↗</span><span class="count">Share</span></button>
+          <button class="action download"><span class="icon">⬇</span><span class="count">Download</span></button>
+        </div>
+      </article>
+    </section>
+  </div>
 </section>
+
+<!-- MUSIC -->
+<section class="page" id="page-Music">
+  <header class="page-header"><h1>🎵 RockyX Music</h1><p>Discover artists, albums and new sounds.</p></header>
+  <div class="content">
+    <input id="music-search" class="field" placeholder="Search artists, songs or albums">
+    <div class="grid">
+      <article class="panel"><h3>🎧 Discover</h3><p>Explore new music and artists.</p></article>
+      <article class="panel"><h3>🔥 Trending</h3><p>Discover popular sounds.</p></article>
+      <article class="panel"><h3>💿 Albums</h3><p>Explore artist albums.</p></article>
+      <article class="panel"><h3>🎼 Playlists</h3><p>Build your own collection.</p></article>
+    </div>
+    <div class="empty" style="margin-top:14px">
+      Music catalogue and playback will appear here when the music module and audio storage are connected.
+    </div>
+  </div>
+</section>
+
+<!-- STUDIO -->
+<section class="page" id="page-Studio">
+  <header class="page-header"><h1>🎬 RockyX Studio</h1><p>Create videos and explore templates.</p></header>
+  <div class="content">
+    <div class="grid">
+      <article class="panel"><h3>✂️ Video Editor</h3><p>Prepare clips, captions, effects and sound.</p></article>
+      <article class="panel"><h3>✨ Templates</h3><p>Discover free and Pro templates.</p></article>
+      <article class="panel"><h3>🎵 Audio</h3><p>Choose audio for your creation.</p></article>
+      <article class="panel"><h3>🏆 Creator Tasks</h3><p>Explore creator programme information.</p></article>
+    </div>
+    <div class="actions-row">
+      <button class="primary" data-notice="Video upload requires connected storage and account permissions.">Upload video</button>
+      <button class="secondary" data-notice="Template listings will appear after template data is connected.">Browse templates</button>
+    </div>
+    <div class="empty">The full editor, template catalogue, publishing and rewards require integration with their respective modules and backend.</div>
+  </div>
+</section>
+
+<!-- MARKETPLACE -->
+<section class="page" id="page-Marketplace">
+  <header class="page-header"><h1>🛍️ Marketplace</h1><p>Discover products and independent sellers.</p></header>
+  <div class="content">
+    <input id="market-search" class="field" placeholder="Search products and sellers">
+    <div class="grid">
+      <article class="panel"><h3>📦 Products</h3><p>Browse available products.</p></article>
+      <article class="panel"><h3>🏪 Sellers</h3><p>Discover seller storefronts.</p></article>
+      <article class="panel"><h3>🛒 Shopping cart</h3><p>Review items before checkout.</p></article>
+      <article class="panel"><h3>🚚 Orders & Delivery</h3><p>Order and shipping information.</p></article>
+    </div>
+    <div class="empty" style="margin-top:14px">Live products, secure checkout, orders, seller commissions, refunds and delivery require backend integration. No real payments are processed by this prototype.</div>
+  </div>
+</section>
+
+<!-- EXPLORE -->
+<section class="page" id="page-Explore">
+  <header class="page-header"><h1>🗺️ RockyX Explore</h1><p>Discover nearby places, businesses and services.</p></header>
+  <div class="content">
+    <div id="explore-category-title"><h2>Explore nearby</h2></div>
+    <div class="explore-categories" id="explore-categories">
+      <button class="category-button active" data-category="all">📍 All nearby</button>
+      <button class="category-button" data-category="transport">🚗 Transport</button>
+      <button class="category-button" data-category="food">🍔 Food</button>
+      <button class="category-button" data-category="fuel">⛽ Fuel</button>
+      <button class="category-button" data-category="healthcare">🏥 Healthcare</button>
+      <button class="category-button" data-category="businesses">🏪 Businesses</button>
+      <button class="category-button" data-category="shopping">🛍️ Shopping</button>
+      <button class="category-button" data-category="hotels">🏨 Hotels</button>
+      <button class="category-button" data-category="services">🔧 Services</button>
+    </div>
+    <input class="field" id="explore-search" placeholder="Search for a place or area">
+    <div class="actions-row">
+      <button class="primary" id="explore-location">📍 Use my location</button>
+      <button class="secondary" id="explore-search-button">Search location</button>
+      <button class="secondary" id="explore-nearby">Find nearby</button>
+    </div>
+    <div id="rockyx-explore-map" aria-label="Map of nearby places"></div>
+    <p id="explore-status" style="color:#bbb;line-height:1.5" role="status">
+      Select a category and allow location access to search nearby places.
+    </p>
+    <h2 style="margin:20px 0 12px" id="explore-results-heading">Nearby places</h2>
+    <div id="rockyx-place-results"></div>
+  </div>
+</section>
+
+<!-- WALLET -->
+<section class="page" id="page-Wallet">
+  <header class="page-header"><h1>💰 Wallet & Rewards</h1><p>Your personal earnings and rewards area.</p></header>
+  <div class="content">
+    <div class="grid">
+      <article class="panel"><h3>Wallet balance</h3><p>Your verified balance will appear after account and payment integration.</p></article>
+      <article class="panel"><h3>Creator earnings</h3><p>View eligible earnings and payouts.</p></article>
+      <article class="panel"><h3>Rewards</h3><p>Explore eligible creator and template rewards.</p></article>
+      <article class="panel"><h3>Transactions</h3><p>Review transaction history.</p></article>
+    </div>
+    <div class="empty" style="margin-top:14px">This is an interface preview. It does not hold money or process payouts.</div>
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section class="page" id="page-Profile">
+  <header class="page-header"><h1>👤 Profile</h1><p>Your RockyX identity and creator space.</p></header>
+  <div class="content">
+    <article class="panel">
+      <div class="creator"><div class="avatar">R</div><div><h3>Your profile</h3><p>Sign in to manage your account.</p></div></div>
+      <div class="actions-row">
+        <button class="primary" data-notice="Secure sign-in will be enabled after authentication is connected.">Sign in / Create account</button>
+        <button class="secondary" data-notice="Creator dashboard requires a verified account and backend integration.">Creator dashboard</button>
+      </div>
+    </article>
+    <div class="grid" style="margin-top:14px">
+      <article class="panel"><h3>🎬 My videos</h3><p>Your published content.</p></article>
+      <article class="panel"><h3>🎨 My templates</h3><p>Your saved and published templates.</p></article>
+      <article class="panel"><h3>👥 Followers</h3><p>Your community.</p></article>
+      <article class="panel"><h3>⚙️ Settings</h3><p>Account, privacy and safety.</p></article>
+    </div>
+  </div>
+</section>
+
 </main>
 </div>
-<nav class="bottom">
-<button class="active" data-nav="Home"><span>⌂</span>Home</button>
-<button data-nav="Discover"><span>⌕</span>Discover</button>
-<button data-nav="Create"><span class="plus">＋</span>Create</button>
-<button data-nav="Inbox"><span>✉</span>Inbox</button>
-<button data-nav="Profile"><span>◉</span>Profile</button>
+
+<!-- PUBLIC APP NAVIGATION ONLY. NO ADMIN ENTRY. -->
+<nav class="bottom" aria-label="Main navigation">
+  <button class="active" data-nav="Home"><span class="nav-icon">⌂</span>Home</button>
+  <button data-nav="Music"><span class="nav-icon">♫</span>Music</button>
+  <button data-nav="Studio"><span class="nav-icon plus">＋</span>Studio</button>
+  <button data-nav="Marketplace"><span class="nav-icon">▣</span>Market</button>
+  <button data-nav="Explore"><span class="nav-icon">⌖</span>Explore</button>
 </nav>
-<div id="toast" class="toast" hidden></div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
 <script>
-const feed=document.getElementById("feed");
-const toast=document.getElementById("toast");
+(function () {
+"use strict";
+
+const $ = (selector, root=document) => root.querySelector(selector);
+const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
+const toast = $("#toast");
 let toastTimer;
-function notify(message){
- toast.hidden=false;
- toast.textContent=message;
- clearTimeout(toastTimer);
- toastTimer=setTimeout(()=>toast.hidden=true,2600);
+
+function notify(message) {
+  toast.textContent = message;
+  toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.hidden = true, 2800);
 }
-const cards=[...document.querySelectorAll(".card")];
-function prepareVideo(card){
- const video=card.querySelector("video");
- if(!video||video.src)return;
- video.src=video.dataset.video;
- video.load();
-}
-async function playCard(card){
- cards.forEach(other=>{
-  const video=other.querySelector("video");
-  if(other!==card&&video)video.pause();
- });
- const video=card.querySelector("video");
- if(!video)return;
- prepareVideo(card);
- try{
-  await video.play();
-  card.querySelector(".poster").style.opacity="0";
- }catch(error){
-  notify("Tap the video to start playback.");
- }
-}
-const observer=new IntersectionObserver(entries=>{
- entries.forEach(entry=>{
-  if(entry.isIntersecting&&entry.intersectionRatio>=0.7){
-   playCard(entry.target);
-  }else{
-   const video=entry.target.querySelector("video");
-   if(video)video.pause();
+
+/* Main page navigation */
+const pageNames = ["Home","Music","Studio","Marketplace","Explore","Wallet","Profile"];
+
+function openPage(name) {
+  if (!pageNames.includes(name)) return;
+
+  $$(".page").forEach(page => {
+    page.classList.toggle("active", page.id === "page-" + name);
+  });
+
+  $$("[data-nav]").forEach(button => {
+    button.classList.toggle("active", button.dataset.nav === name);
+  });
+
+  if (name === "Explore") {
+    setTimeout(() => {
+      if (window.RockyXExplore && window.RockyXExplore.map) {
+        window.RockyXExplore.map.invalidateSize();
+      } else if (window.L && $("#rockyx-explore-map")) {
+        window.RockyXExplore?.loadMap();
+      }
+    }, 150);
   }
- });
-},{root:feed,threshold:[0,0.7,1]});
-cards.forEach(card=>{
- observer.observe(card);
- const video=card.querySelector("video");
- video.addEventListener("playing",()=>card.querySelector(".poster").style.opacity="0");
- video.addEventListener("pause",()=>{
-  if(video.currentTime===0)card.querySelector(".poster").style.opacity="1";
- });
- video.addEventListener("error",()=>notify("This sample video could not load. Try another video later."));
- video.addEventListener("click",()=>{
-  if(video.paused)playCard(card);
-  else video.pause();
- });
- card.querySelector(".poster").addEventListener("click",()=>playCard(card));
+
+  if (name === "Home") {
+    const feed = $("#feed");
+    if (feed) feed.scrollTo({top:0,behavior:"smooth"});
+  }
+}
+
+$$("[data-nav]").forEach(button => {
+  button.addEventListener("click", () => openPage(button.dataset.nav));
 });
-document.querySelectorAll(".like").forEach(button=>{
- button.addEventListener("click",()=>{
-  const liked=button.classList.toggle("liked");
-  const count=button.querySelector(".count");
-  if(!count.dataset.original)count.dataset.original=count.textContent;
-  const base=parseFloat(count.dataset.original);
-  count.textContent=liked?(base+1).toLocaleString():count.dataset.original;
- });
-});
-document.querySelectorAll(".follow").forEach(button=>{
- button.addEventListener("click",()=>{
-  const on=button.textContent==="Following";
-  button.textContent=on?"Follow":"Following";
-  notify(on?"Creator unfollowed":"Following creator");
- });
-});
-document.querySelectorAll(".comment").forEach(button=>{
- button.addEventListener("click",()=>notify("Comments will be available when the backend is connected."));
-});
-document.querySelectorAll(".share").forEach(button=>{
- button.addEventListener("click",async()=>{
-  const card=button.closest(".card");
-  const shareData={title:"RockyX",text:card.querySelector(".caption").textContent,url:location.href};
-  try{
-   if(navigator.share)await navigator.share(shareData);
-   else if(navigator.clipboard){await navigator.clipboard.writeText(location.href);notify("RockyX link copied.");}
-   else notify("Use your browser's Share menu to share RockyX.");
-  }catch(error){if(error.name!=="AbortError")notify("Sharing isn't available here.");}
- });
-});
-document.querySelectorAll(".download").forEach(button=>{
- button.addEventListener("click",()=>{
-  const card=button.closest(".card");
-  const video=card.querySelector("video");
+
+/* Feed demo interactions */
+const feed = $("#feed");
+const cards = $$(".card");
+
+function prepareVideo(card) {
+  const video = $("video", card);
+  if (!video || video.src) return;
+  video.src = video.dataset.video;
+  video.load();
+}
+
+async function playCard(card) {
+  cards.forEach(other => {
+    const video = $("video", other);
+    if (other !== card && video) video.pause();
+  });
+
+  const video = $("video", card);
+  if (!video) return;
+
   prepareVideo(card);
-  const link=document.createElement("a");
-  link.href=video.dataset.video;
-  link.target="_blank";
-  link.rel="noopener";
-  link.download="rockyx-video.mp4";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  notify("Opening video file. If it plays in Safari, use Share → Save Video or Save to Files.");
- });
+  try {
+    await video.play();
+    $(".poster", card).style.opacity = "0";
+  } catch (error) {
+    notify("Tap the video to start playback.");
+  }
+}
+
+if ("IntersectionObserver" in window && feed) {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const card = entry.target;
+      const video = $("video", card);
+      if (entry.isIntersecting && entry.intersectionRatio >= .7) {
+        playCard(card);
+      } else if (video) {
+        video.pause();
+      }
+    });
+  }, {root:feed,threshold:[0,.7,1]});
+
+  cards.forEach(card => observer.observe(card));
+}
+
+cards.forEach(card => {
+  const video = $("video", card);
+  const poster = $(".poster", card);
+
+  video?.addEventListener("playing", () => poster.style.opacity = "0");
+  video?.addEventListener("error", () => notify("Sample video couldn't load."));
+  video?.addEventListener("click", () => video.paused ? playCard(card) : video.pause());
+  poster?.addEventListener("click", () => playCard(card));
 });
-document.querySelectorAll("[data-tab]").forEach(button=>{
- button.addEventListener("click",()=>{
-  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===button));
-  if(button.dataset.tab==="Following")notify("Following feed will be personalised after accounts are connected.");
-  else feed.scrollTo({top:0,behavior:"smooth"});
- });
+
+$$(".like").forEach(button => {
+  button.addEventListener("click", () => {
+    const liked = button.classList.toggle("liked");
+    const count = $(".count", button);
+    const base = Number(count.dataset.base || 0);
+    count.textContent = (base + (liked ? 1 : 0)).toLocaleString();
+  });
 });
-document.querySelectorAll("[data-nav]").forEach(button=>{
- button.addEventListener("click",()=>{
-  document.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===button.dataset.nav));
-  const section=button.dataset.nav;
-  if(section==="Home")feed.scrollTo({top:0,behavior:"smooth"});
-  else if(section==="Discover")notify("Discover is coming soon.");
-  else if(section==="Create")notify("Video uploads will be enabled when RockyX storage is connected.");
-  else if(section==="Inbox")notify("Inbox is coming soon.");
-  else if(section==="Profile")notify("Profiles and sign-in are coming soon.");
- });
+
+$$(".follow").forEach(button => {
+  button.addEventListener("click", () => {
+    const following = button.textContent === "Following";
+    button.textContent = following ? "Follow" : "Following";
+    notify(following ? "Creator unfollowed." : "Following creator.");
+  });
 });
+
+$$(".comment").forEach(button => {
+  button.addEventListener("click", () =>
+    notify("Comments require backend integration.")
+  );
+});
+
+$$(".share").forEach(button => {
+  button.addEventListener("click", async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({title:"RockyX",url:location.href});
+      } else {
+        notify("Use your browser's Share option to share RockyX.");
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") notify("Sharing isn't available here.");
+    }
+  });
+});
+
+$$(".download").forEach(button => {
+  button.addEventListener("click", () => {
+    const video = $("video", button.closest(".card"));
+    if (!video) return;
+    prepareVideo(button.closest(".card"));
+    const link = document.createElement("a");
+    link.href = video.dataset.video;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.download = "rockyx-video.mp4";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    notify("If the video opens in Safari, use Share to save it.");
+  });
+});
+
+$$("[data-tab]").forEach(button => {
+  button.addEventListener("click", () => {
+    $$("[data-tab]").forEach(other =>
+      other.classList.toggle("active", other === button)
+    );
+
+    if (button.dataset.tab === "Following") {
+      notify("Your personalised feed requires account integration.");
+    } else {
+      feed?.scrollTo({top:0,behavior:"smooth"});
+    }
+  });
+});
+
+$$("[data-notice]").forEach(button => {
+  button.addEventListener("click", () => notify(button.dataset.notice));
+});
+
+/* Explore map integration */
+const exploreStatus = $("#explore-status");
+const exploreResults = $("#rockyx-place-results");
+const exploreHeading = $("#explore-results-heading");
+
+const categoryInfo = {
+  all:{title:"Explore nearby",filters:{}},
+  transport:{title:"Transport",filters:{
+    amenity:["bus_station","taxi"],
+    public_transport:["station","platform","stop_position"],
+    railway:["station","halt"],
+    highway:["bus_stop"]
+  }},
+  food:{title:"Food & Restaurants",filters:{
+    amenity:["restaurant","cafe","fast_food","food_court","ice_cream"]
+  }},
+  fuel:{title:"Fuel Stations",filters:{amenity:["fuel"]}},
+  healthcare:{title:"Healthcare",filters:{
+    amenity:["hospital","clinic","doctors","pharmacy","dentist"]
+  }},
+  businesses:{title:"Businesses",filters:{
+    shop:["supermarket","convenience","mall"],
+    office:["company","commercial"]
+  }},
+  shopping:{title:"Shopping",filters:{
+    shop:["clothes","shoes","electronics","department_store","supermarket","mall"]
+  }},
+  hotels:{title:"Hotels & Accommodation",filters:{
+    tourism:["hotel","motel","guest_house","hostel"]
+  }},
+  services:{title:"Services",filters:{
+    craft:["electrician","plumber","carpenter"],
+    office:["lawyer","accountant","company"]
+  }}
+};
+
+let currentCategory = "all";
+let userLocation = null;
+let map = null;
+let mapMarkers = [];
+let mapLibraryLoading = false;
+let searchSequence = 0;
+
+function setExploreStatus(message) {
+  exploreStatus.textContent = message;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+function loadMapLibrary() {
+  if (window.L) {
+    createExploreMap();
+    return;
+  }
+  if (mapLibraryLoading) return;
+  mapLibraryLoading = true;
+
+  const css = document.createElement("link");
+  css.rel = "stylesheet";
+  css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+  document.head.appendChild(css);
+
+  const script = document.createElement("script");
+  script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+  script.onload = createExploreMap;
+  script.onerror = () => {
+    mapLibraryLoading = false;
+    setExploreStatus("Map library failed to load. Check your connection.");
+  };
+  document.head.appendChild(script);
+}
+
+function createExploreMap() {
+  if (!window.L || map) return;
+
+  map = L.map("rockyx-explore-map").setView([5.6037,-0.1870],12);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,
+    attribution:"&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  if (userLocation) map.setView([userLocation.lat,userLocation.lon],14);
+  setTimeout(() => map.invalidateSize(),150);
+}
+
+function clearMapMarkers() {
+  mapMarkers.forEach(marker => marker.remove());
+  mapMarkers = [];
+}
+
+function makeOverpassQuery(category,lat,lon) {
+  const radius = 5000;
+  const parts = [];
+
+  Object.entries(category.filters).forEach(([key,values]) => {
+    values.forEach(value => {
+      const selector = `["${key}"="${value}"]`;
+      parts.push(`node${selector}(around:${radius},${lat},${lon});`);
+      parts.push(`way${selector}(around:${radius},${lat},${lon});`);
+      parts.push(`relation${selector}(around:${radius},${lat},${lon});`);
+    });
+  });
+
+  return `[out:json][timeout:20];(${parts.join("")});out center tags;`;
+}
+
+async function findNearby() {
+  if (!userLocation) {
+    setExploreStatus("Use your location or search for an area first.");
+    return;
+  }
+
+  if (!map) {
+    setExploreStatus("Loading the map. Please try again shortly.");
+    loadMapLibrary();
+    return;
+  }
+
+  const category = categoryInfo[currentCategory];
+  if (!category || currentCategory === "all") {
+    setExploreStatus("Choose a specific category to search nearby places.");
+    return;
+  }
+
+  const sequence = ++searchSequence;
+  setExploreStatus("Searching nearby " + category.title.toLowerCase() + "...");
+  clearMapMarkers();
+  exploreResults.replaceChildren();
+
+  try {
+    const response = await fetch("https://overpass-api.de/api/interpreter",{
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body:"data=" + encodeURIComponent(
+        makeOverpassQuery(category,userLocation.lat,userLocation.lon)
+      )
+    });
+
+    if (!response.ok) throw new Error("Nearby service unavailable.");
+    const data = await response.json();
+    if (sequence !== searchSequence) return;
+
+    const places = (data.elements || []).map(item => ({
+      id:item.type + "/" + item.id,
+      name:(item.tags && item.tags.name) || category.title + " location",
+      lat:item.lat ?? item.center?.lat,
+      lon:item.lon ?? item.center?.lon,
+      tags:item.tags || {}
+    })).filter(place =>
+      Number.isFinite(place.lat) && Number.isFinite(place.lon)
+    );
+
+    places.forEach((place,index) => {
+      const marker = L.marker([place.lat,place.lon]).addTo(map)
+        .bindPopup(escapeHTML(place.name));
+      mapMarkers.push(marker);
+
+      const article = document.createElement("article");
+      article.className = "panel place-card";
+      article.innerHTML = `
+        <h3>${escapeHTML(place.name)}</h3>
+        <p>${escapeHTML(place.tags.amenity || place.tags.shop || place.tags.tourism || category.title)}</p>
+        <div class="actions-row">
+          <button type="button" class="secondary" data-show-place="${index}">Show on map</button>
+          <a class="primary" style="text-decoration:none" target="_blank" rel="noopener noreferrer"
+            href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.lat+","+place.lon)}">Directions</a>
+        </div>`;
+      exploreResults.appendChild(article);
+    });
+
+    $$("[data-show-place]",exploreResults).forEach(button => {
+      button.addEventListener("click",() => {
+        const index = Number(button.dataset.showPlace);
+        const place = places[index];
+        map.setView([place.lat,place.lon],16);
+        mapMarkers[index]?.openPopup();
+      });
+    });
+
+    setExploreStatus(places.length + " places found within approximately 5 km. Listings may be incomplete.");
+  } catch(error) {
+    if (sequence !== searchSequence) return;
+    console.error("RockyX Explore:",error);
+    setExploreStatus("Nearby search failed. Please try again later.");
+  }
+}
+
+$$("[data-category]").forEach(button => {
+  button.addEventListener("click",() => {
+    currentCategory = button.dataset.category;
+    $$("[data-category]").forEach(other =>
+      other.classList.toggle("active",other === button)
+    );
+    exploreHeading.textContent = (categoryInfo[currentCategory]?.title || "Nearby") + " Near You";
+    if (currentCategory === "all") {
+      clearMapMarkers();
+      exploreResults.replaceChildren();
+      setExploreStatus("Choose a category to find relevant nearby places.");
+    } else if (userLocation) {
+      findNearby();
+    } else {
+      setExploreStatus("Use your location or search for an area to find " + categoryInfo[currentCategory].title.toLowerCase() + ".");
+    }
+  });
+});
+
+$("#explore-location").addEventListener("click",() => {
+  if (!navigator.geolocation) {
+    setExploreStatus("Location is not supported by this browser.");
+    return;
+  }
+
+  setExploreStatus("Requesting location permission...");
+  navigator.geolocation.getCurrentPosition(position => {
+    userLocation = {
+      lat:position.coords.latitude,
+      lon:position.coords.longitude
+    };
+    loadMapLibrary();
+    createExploreMap();
+    if (map) map.setView([userLocation.lat,userLocation.lon],14);
+    setExploreStatus("Location found. Loading nearby places...");
+    if (currentCategory !== "all") findNearby();
+  },() => {
+    setExploreStatus("Location access wasn't granted. Search for a place or area instead.");
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+});
+
+$("#explore-nearby").addEventListener("click",findNearby);
+
+$("#explore-search-button").addEventListener("click",async() => {
+  const query = $("#explore-search").value.trim();
+  if (!query) {
+    setExploreStatus("Enter a town, address or place to search.");
+    return;
+  }
+
+  setExploreStatus("Searching for location...");
+  try {
+    const response = await fetch(
+      "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(query)
+    );
+    if (!response.ok) throw new Error("Location search failed.");
+    const results = await response.json();
+    if (!results.length) {
+      setExploreStatus("No matching location found.");
+      return;
+    }
+
+    userLocation = {lat:Number(results[0].lat),lon:Number(results[0].lon)};
+    loadMapLibrary();
+    createExploreMap();
+    if (map) map.setView([userLocation.lat,userLocation.lon],14);
+    if (currentCategory !== "all") findNearby();
+    else setExploreStatus("Location selected. Now choose a category.");
+  } catch(error) {
+    setExploreStatus("Location search failed. Please try again later.");
+  }
+});
+
+$("#explore-search").addEventListener("keydown",event => {
+  if (event.key === "Enter") $("#explore-search-button").click();
+});
+
+/* Start loading the map only when Explore is opened. */
+const originalOpenPage = openPage;
+document.querySelectorAll("[data-nav]").forEach(button => {
+  button.addEventListener("click",() => {
+    if (button.dataset.nav === "Explore") {
+      loadMapLibrary();
+      setTimeout(() => map?.invalidateSize(),200);
+    }
+  });
+});
+
+/* Load the separate Explore module if present, without making it a dependency. */
+const exploreScript = document.createElement("script");
+exploreScript.src = "assets/js/explore.js";
+exploreScript.onload = () => {
+  console.info("RockyX Explore module loaded.");
+};
+exploreScript.onerror = () => {
+  console.info("Using built-in Explore interface.");
+};
+document.body.appendChild(exploreScript);
+
+})();
 </script>
 </body>
 </html>
