@@ -2,48 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="theme-color" content="#101010">
-  <meta name="description"
-        content="RockyX — One World. One Platform.">
+  <meta name="theme-color" content="#100e18">
+  <meta name="description" content="RockyX — One World. One Platform.">
 
   <title>RockyX — One World. One Platform.</title>
 
   <style>
     :root {
-      --bg: #101010;
-      --panel: #191919;
-      --panel2: #242424;
+      --bg: #100e18;
+      --panel: #191522;
+      --panel-light: #211c2d;
+      --purple: #8b5cf6;
+      --purple-light: #a78bfa;
       --text: #ffffff;
-      --muted: #aaaaaa;
-      --accent: #8651df;
-      --border: #333333;
-      --pink: #ff2d55;
-      --nav-height: 68px;
+      --muted: #aaa4ba;
+      --border: #332b42;
+      --nav-height: 66px;
     }
 
     * {
       box-sizing: border-box;
     }
 
-    html {
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
       background: var(--bg);
       color: var(--text);
-      scroll-behavior: smooth;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont,
-                   "Segoe UI", sans-serif;
+      padding-bottom: var(--nav-height);
     }
 
-    button, input, textarea, select {
+    button,
+    input,
+    textarea,
+    select {
       font: inherit;
     }
 
@@ -52,39 +51,38 @@
     }
 
     button:focus-visible,
-    a:focus-visible,
     input:focus-visible {
-      outline: 2px solid #bda0ff;
+      outline: 2px solid var(--purple-light);
       outline-offset: 3px;
     }
 
-    [hidden] {
-      display: none !important;
+    #app {
+      min-height: 100vh;
     }
 
     .app-header {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 50;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 12px 16px;
+      padding: 0 16px;
+      background: rgba(16, 14, 24, 0.96);
       border-bottom: 1px solid var(--border);
-      background: rgba(16, 16, 16, .96);
-      backdrop-filter: blur(12px);
     }
 
     .brand {
-      color: white;
-      font-size: 23px;
-      font-weight: 900;
-      letter-spacing: -.7px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.7px;
+      color: var(--purple-light);
     }
 
     .brand span {
-      color: #b995ff;
+      color: white;
     }
 
     .header-actions {
@@ -94,862 +92,581 @@
     }
 
     .icon-button {
-      min-width: 42px;
-      min-height: 42px;
       border: 1px solid var(--border);
-      border-radius: 50%;
-      background: var(--panel2);
+      background: var(--panel);
       color: white;
+      width: 39px;
+      height: 39px;
+      border-radius: 12px;
     }
 
     .app-layout {
       width: 100%;
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
     }
 
-    .desktop-sidebar {
+    .sidebar {
       display: none;
     }
 
-    main {
-      width: 100%;
+    .main-content {
       min-width: 0;
-      padding-bottom: calc(var(--nav-height) + 20px);
+      padding: 14px;
     }
 
-    .app-page {
-      min-height: 70vh;
-      padding: 16px 12px 30px;
+    .screen {
+      display: none;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .screen.active {
+      display: block;
     }
 
     .page-heading {
-      margin: 4px 0 16px;
-      font-size: 24px;
+      font-size: 23px;
+      margin: 8px 0 16px;
     }
 
     .muted {
       color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
     }
 
     .primary-button {
-      padding: 11px 15px;
-      border: 0;
-      border-radius: 10px;
-      background: var(--accent);
+      background: var(--purple);
       color: white;
-      font-weight: 750;
+      border: 0;
+      border-radius: 11px;
+      padding: 12px 16px;
+      font-weight: 700;
     }
 
     .secondary-button {
-      padding: 11px 15px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--panel2);
+      background: var(--panel-light);
       color: white;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 11px 14px;
     }
-
-    /* HOME FEED */
 
     .feed-tabs {
       display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 26px;
-      margin-bottom: 14px;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 8px 0 16px;
       border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
     }
 
-    .feed-tab {
-      padding: 12px 4px;
-      border: 0;
-      border-bottom: 3px solid transparent;
-      background: transparent;
+    .feed-tabs button {
+      white-space: nowrap;
       color: var(--muted);
-      font-weight: 750;
+      background: transparent;
+      border: 0;
+      padding: 8px 0;
+      font-weight: 700;
     }
 
-    .feed-tab.active {
-      border-bottom-color: white;
+    .feed-tabs button.active {
       color: white;
+      border-bottom: 2px solid var(--purple-light);
     }
 
-    .feed-list {
-      width: 100%;
-      max-width: 680px;
-      margin: 0 auto;
-    }
-
-    .video-card {
-      position: relative;
-      margin-bottom: 20px;
+    .feed-placeholder {
+      max-width: 520px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
       overflow: hidden;
+      background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      background: #181818;
-    }
-
-    .video-stage {
-      position: relative;
-      display: grid;
-      place-items: center;
-      min-height: 390px;
-      max-height: 76vh;
-      overflow: hidden;
-      background: #080808;
-      touch-action: manipulation;
-    }
-
-    .video-stage video {
-      display: block;
-      width: 100%;
-      max-height: 76vh;
-      object-fit: contain;
-      background: #080808;
     }
 
     .video-placeholder {
-      padding: 55px 20px;
-      text-align: center;
-      color: #bbb;
-    }
-
-    .video-placeholder .placeholder-icon {
-      font-size: 56px;
-    }
-
-    .video-details {
-      padding: 14px;
-    }
-
-    .creator-row {
+      aspect-ratio: 9 / 12;
+      max-height: 560px;
       display: flex;
+      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 10px;
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(155deg, #302044, #15121e);
     }
 
-    .avatar {
-      display: grid;
-      flex: 0 0 42px;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #8651df, #de70b5);
-      font-weight: 900;
-    }
-
-    .creator-info {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .creator-info strong {
-      display: block;
-      overflow-wrap: anywhere;
-    }
-
-    .creator-info small {
-      color: var(--muted);
-    }
-
-    .follow-button {
-      padding: 8px 13px;
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      background: transparent;
-      color: white;
-      font-weight: 750;
+    .video-placeholder .play-icon {
+      font-size: 46px;
+      margin-bottom: 12px;
     }
 
     .video-caption {
-      margin: 12px 0;
-      line-height: 1.5;
+      padding: 14px;
+      line-height: 1.6;
     }
 
-    .video-actions {
+    .feed-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      padding: 0 14px 14px;
     }
 
-    .video-action {
-      min-width: 58px;
-      padding: 8px 10px;
+    .feed-actions button {
+      background: var(--panel-light);
+      color: white;
       border: 1px solid var(--border);
       border-radius: 10px;
-      background: var(--panel2);
-      color: white;
-    }
-
-    .video-action.liked {
-      color: var(--pink);
-    }
-
-    .comments {
-      display: grid;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .comment-item {
-      padding: 10px;
-      border-radius: 10px;
-      background: #222;
-      overflow-wrap: anywhere;
-    }
-
-    .comment-item strong {
-      margin-right: 6px;
-    }
-
-    .comment-form {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .comment-form input {
-      min-width: 0;
-      flex: 1;
-      padding: 11px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #111;
-      color: white;
-    }
-
-    .comment-form button {
-      padding: 10px 12px;
-      border: 0;
-      border-radius: 10px;
-      background: var(--accent);
-      color: white;
-    }
-
-    .rockyx-double-tap-heart {
-      user-select: none;
-    }
-
-    /* EXPLORE */
-
-    .explore-intro {
-      padding: 18px;
-      margin-bottom: 16px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: linear-gradient(135deg, #271944, #181818);
-    }
-
-    .explore-intro h1 {
-      margin: 0 0 8px;
-    }
-
-    .explore-intro p {
-      margin: 0;
-      color: #d0c7df;
-      line-height: 1.5;
+      padding: 9px 12px;
     }
 
     .category-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 12px;
     }
 
-    .category-button {
-      min-height: 94px;
-      padding: 14px 8px;
+    .category-card {
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      background: var(--panel);
+      min-height: 105px;
+      padding: 15px;
       color: white;
       text-align: left;
     }
 
-    .category-button .category-icon {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 26px;
-    }
-
-    .category-button strong {
-      display: block;
-    }
-
-    .category-button small {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-    }
-
-    .discovery-links {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .discovery-link {
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--panel);
-      color: white;
-      text-align: left;
-    }
-
-    .discovery-link span {
+    .category-card strong {
       display: block;
       margin-bottom: 7px;
-      font-size: 24px;
     }
 
-    /* OTHER SCREENS */
+    .category-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
 
-    .feature-panel {
-      max-width: 700px;
-      padding: 20px;
-      margin: 0 auto 16px;
+    .screen-message {
+      padding: 25px 18px;
+      text-align: center;
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 16px;
-      background: var(--panel);
     }
 
-    .feature-panel h2 {
+    .screen-message h2 {
       margin-top: 0;
     }
 
-    .feature-panel p {
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .profile-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 18px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: var(--panel);
-    }
-
-    .profile-card .avatar {
-      width: 64px;
-      height: 64px;
-      flex-basis: 64px;
-      font-size: 22px;
-    }
-
-    .status-message {
-      min-height: 24px;
-      margin: 12px 0;
-      color: #c7a7ff;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    /* BOTTOM NAVIGATION */
-
     .bottom-nav {
       position: fixed;
-      right: 0;
       bottom: 0;
       left: 0;
-      z-index: 200;
+      right: 0;
+      z-index: 100;
+      height: var(--nav-height);
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      padding: 7px 4px calc(7px + env(safe-area-inset-bottom));
-      border-top: 1px solid #303030;
-      background: rgba(16, 16, 16, .98);
-      backdrop-filter: blur(12px);
+      background: rgba(20, 17, 29, 0.98);
+      border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     .bottom-nav button {
-      display: grid;
-      justify-items: center;
-      gap: 4px;
-      min-width: 0;
-      padding: 5px 1px;
-      border: 0;
-      border-radius: 8px;
       background: transparent;
-      color: #aaa;
+      color: var(--muted);
+      border: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
       font-size: 10px;
     }
 
     .bottom-nav button .nav-icon {
-      font-size: 22px;
+      font-size: 20px;
     }
 
     .bottom-nav button.active {
-      color: #c7a7ff;
+      color: var(--purple-light);
     }
 
-    .bottom-nav button.create-nav .nav-icon {
-      display: grid;
-      place-items: center;
-      width: 34px;
-      height: 27px;
-      border-radius: 8px;
-      background: var(--accent);
-      color: white;
-      font-weight: 900;
-    }
-
-    .toast {
+    #app-toast {
       position: fixed;
-      right: 16px;
-      bottom: calc(var(--nav-height) + 18px);
-      left: 16px;
-      z-index: 500;
-      max-width: 500px;
-      padding: 13px 16px;
-      margin: 0 auto;
-      border: 1px solid #444;
-      border-radius: 12px;
-      background: #292929;
+      left: 50%;
+      bottom: calc(var(--nav-height) + 14px);
+      transform: translateX(-50%);
+      z-index: 200;
+      max-width: calc(100% - 32px);
+      background: #30263f;
+      border: 1px solid #59447e;
       color: white;
-      text-align: center;
-      box-shadow: 0 8px 28px #0008;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px #0005;
+      font-size: 13px;
     }
 
-    @media (min-width: 850px) {
+    #app-toast[hidden] {
+      display: none;
+    }
+
+    .module-error {
+      border: 1px solid #a94455;
+      background: #321a24;
+      color: #ffd9df;
+      padding: 14px;
+      border-radius: 12px;
+      margin: 12px 0;
+      line-height: 1.5;
+    }
+
+    @media (min-width: 760px) {
+      body {
+        padding-bottom: 0;
+      }
+
       .app-layout {
         display: grid;
-        grid-template-columns: 210px minmax(0, 1fr);
+        grid-template-columns: 205px minmax(0, 1fr);
       }
 
-      .desktop-sidebar {
-        position: sticky;
-        top: 70px;
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-        height: calc(100vh - 70px);
-        padding: 20px 12px;
+      .sidebar {
+        display: block;
+        padding: 16px 10px;
         border-right: 1px solid var(--border);
+        min-height: calc(100vh - 60px);
       }
 
-      .desktop-sidebar button {
-        padding: 13px;
-        border: 0;
-        border-radius: 10px;
+      .sidebar button {
+        display: block;
+        width: 100%;
         background: transparent;
-        color: white;
+        color: var(--muted);
+        border: 0;
+        border-radius: 11px;
         text-align: left;
-        font-weight: 700;
+        padding: 14px;
+        margin-bottom: 5px;
       }
 
-      .desktop-sidebar button.active {
-        background: #2b213c;
-        color: #c7a7ff;
+      .sidebar button.active {
+        background: #302442;
+        color: white;
+      }
+
+      .main-content {
+        padding: 20px;
       }
 
       .bottom-nav {
         display: none;
       }
 
-      main {
-        padding-bottom: 30px;
-      }
-
-      .app-page {
-        padding: 24px;
-      }
-
       .category-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .discovery-links {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 380px) {
-      .video-stage {
-        min-height: 300px;
-      }
-
-      .video-action {
-        padding: 7px;
       }
     }
   </style>
 </head>
 
 <body>
-  <header class="app-header">
-    <div class="brand">Rocky<span>X</span></div>
+  <div id="app">
 
-    <div class="header-actions">
-      <button class="icon-button" type="button"
-              data-nav="Inbox" aria-label="Open inbox">✉️</button>
-      <button class="icon-button" type="button"
-              data-nav="Profile" aria-label="Open profile">👤</button>
-    </div>
-  </header>
+    <header class="app-header">
+      <div class="brand">Rocky<span>X</span></div>
 
-  <div class="app-layout">
-    <aside class="desktop-sidebar" aria-label="Main navigation">
-      <button type="button" data-nav="Home" class="active">🏠 Home</button>
-      <button type="button" data-nav="Explore">🧭 Explore</button>
-      <button type="button" data-nav="Studio">🎬 Studio</button>
-      <button type="button" data-nav="Inbox">💬 Inbox</button>
-      <button type="button" data-nav="Profile">👤 Profile</button>
-      <button type="button" data-nav="Music">🎵 Music</button>
-      <button type="button" data-nav="Marketplace">🛍️ Marketplace</button>
-      <button type="button" data-nav="Wallet">💰 Wallet</button>
-    </aside>
+      <div class="header-actions">
+        <button
+          class="icon-button"
+          type="button"
+          data-nav="Inbox"
+          aria-label="Notifications and messages"
+        >✉</button>
 
-    <main id="app-main">
-      <!-- HOME -->
-      <section id="page-Home" class="app-page is-active">
-        <div class="feed-tabs" aria-label="Video feed">
-          <button type="button" class="feed-tab"
-                  data-feed-tab="Following">Following</button>
-          <button type="button" class="feed-tab active"
-                  data-feed-tab="For You">For You</button>
-        </div>
+        <button
+          class="icon-button"
+          type="button"
+          data-nav="Profile"
+          aria-label="Profile"
+        >👤</button>
+      </div>
+    </header>
 
-        <div class="feed-list" id="for-you-feed">
-          <article class="video-card" data-video-card data-video-id="demo-video-1">
-            <div class="video-stage">
-              <div class="video-placeholder">
-                <div class="placeholder-icon">🎬</div>
-                <p>RockyX video feed</p>
-                <small>Add real video posts as the backend is connected.</small>
-              </div>
-            </div>
+    <div class="app-layout">
 
-            <div class="video-details">
-              <div class="creator-row">
-                <div class="avatar">R</div>
-                <div class="creator-info">
-                  <strong>@rockyx_creator</strong>
-                  <small>RockyX Creator</small>
-                </div>
-                <button type="button" class="follow-button">Follow</button>
-              </div>
+      <aside class="sidebar" aria-label="Main navigation">
+        <button type="button" data-nav="Home" class="active">
+          🏠 Home
+        </button>
 
-              <p class="video-caption">
-                Welcome to RockyX! Discover creators, music, templates and
-                businesses in one place. #RockyX
-              </p>
+        <button type="button" data-nav="Explore">
+          🧭 Explore
+        </button>
 
-              <div class="video-actions">
-                <button type="button" class="video-action like"
-                        aria-pressed="false">❤️ <span class="like-count"
-                        data-like-count>120</span></button>
-                <button type="button" class="video-action"
-                        data-comment-toggle>💬 Comments</button>
-                <button type="button" class="video-action"
-                        data-share>↗ Share</button>
-              </div>
+        <button type="button" data-nav="Studio">
+          ➕ Create
+        </button>
 
-              <div class="comments" hidden>
-                <div class="comment-item" data-comment>
-                  <strong>@creatorfan</strong> Welcome to RockyX! 💜
-                </div>
+        <button type="button" data-nav="Inbox">
+          💬 Inbox
+        </button>
 
-                <form class="comment-form">
-                  <input type="text" name="comment"
-                         placeholder="Write a comment..."
-                         aria-label="Write a comment" maxlength="500">
-                  <button type="submit">Send</button>
-                </form>
-              </div>
-            </div>
-          </article>
+        <button type="button" data-nav="Profile">
+          👤 Profile
+        </button>
 
-          <!-- Templates will be inserted into this feed by the module. -->
+        <button type="button" data-nav="Music">
+          🎵 Music
+        </button>
+
+        <button type="button" data-nav="Marketplace">
+          🛍 Marketplace
+        </button>
+
+        <button type="button" data-nav="Wallet">
+          💰 Wallet
+        </button>
+      </aside>
+
+      <main id="app-main" class="main-content">
+
+        <section id="page-Home" class="screen active">
+          <div class="feed-tabs" aria-label="Feed categories">
+            <button type="button" data-feed-tab="LIVE">
+              LIVE
+            </button>
+
+            <button type="button" data-feed-tab="STEM">
+              STEM
+            </button>
+
+            <button type="button" data-feed-tab="Following">
+              Following
+            </button>
+
+            <button
+              type="button"
+              data-feed-tab="For You"
+              class="active"
+            >
+              For You
+            </button>
+          </div>
+
+          <div id="feed-status" class="muted" aria-live="polite"></div>
+
           <div id="feed-template-slot"></div>
 
-          <article class="video-card" data-video-card data-video-id="demo-video-2">
-            <div class="video-stage">
-              <div class="video-placeholder">
-                <div class="placeholder-icon">🎵</div>
-                <p>Discover music and creative videos</p>
-                <small>Real posts will load from the content service.</small>
+          <article class="feed-placeholder">
+            <div class="video-placeholder">
+              <div class="play-icon">▶</div>
+              <strong>Welcome to RockyX</strong>
+              <p class="muted">
+                Your For You video feed will appear here.
+              </p>
+              <p class="muted">
+                Real videos will be connected when uploads
+                and backend storage are integrated.
+              </p>
+            </div>
+
+            <div class="video-caption">
+              <strong>@RockyX</strong>
+              <div class="muted">
+                One World. One Platform.
               </div>
             </div>
 
-            <div class="video-details">
-              <div class="creator-row">
-                <div class="avatar">M</div>
-                <div class="creator-info">
-                  <strong>@music_discover</strong>
-                  <small>Music Creator</small>
-                </div>
-                <button type="button" class="follow-button">Follow</button>
-              </div>
+            <div class="feed-actions">
+              <button type="button" data-nav="Studio">
+                ＋ Create
+              </button>
 
-              <p class="video-caption">
-                Discover new sounds and creative ideas on RockyX. 🎧
-              </p>
+              <button type="button" data-nav="Inbox">
+                💬 Comments
+              </button>
 
-              <div class="video-actions">
-                <button type="button" class="video-action like"
-                        aria-pressed="false">❤️ <span class="like-count"
-                        data-like-count>84</span></button>
-                <button type="button" class="video-action"
-                        data-comment-toggle>💬 Comments</button>
-                <button type="button" class="video-action"
-                        data-share>↗ Share</button>
-              </div>
-
-              <div class="comments" hidden>
-                <div class="comment-item" data-comment>
-                  <strong>@soundlover</strong> Love this idea! 🎵
-                </div>
-
-                <form class="comment-form">
-                  <input type="text" name="comment"
-                         placeholder="Write a comment..."
-                         aria-label="Write a comment" maxlength="500">
-                  <button type="submit">Send</button>
-                </form>
-              </div>
+              <button type="button" data-share>
+                ↗ Share
+              </button>
             </div>
           </article>
-        </div>
+        </section>
 
-        <p class="status-message" id="feed-status" role="status"></p>
-      </section>
+        <section id="page-Explore" class="screen">
+          <h1 class="page-heading">Explore</h1>
 
-      <!-- EXPLORE -->
-      <section id="page-Explore" class="app-page" hidden>
-        <div class="explore-intro">
-          <h1>Explore RockyX</h1>
-          <p>
-            Discover nearby places, services, music and products.
-            Choose a category to open its dedicated page.
+          <p class="muted">
+            Discover transport, businesses, services, food,
+            fuel and places around you.
           </p>
-        </div>
 
-        <h2 class="page-heading">Discover categories</h2>
+          <div class="category-grid">
+            <button class="category-card" type="button"
+              data-category="Transport">
+              <strong>🚕 Transport</strong>
+              <span>Travel and transport services</span>
+            </button>
 
-        <div class="category-grid" id="explore-category-grid">
-          <button class="category-button" type="button"
-                  data-rockyx-category="transport">
-            <span class="category-icon">🚗</span>
-            <strong>Transport</strong><small>Travel and rides</small>
-          </button>
+            <button class="category-card" type="button"
+              data-category="Businesses">
+              <strong>🏪 Businesses</strong>
+              <span>Discover local businesses</span>
+            </button>
 
-          <button class="category-button" type="button"
-                  data-rockyx-category="food">
-            <span class="category-icon">🍔</span>
-            <strong>Food</strong><small>Restaurants and meals</small>
-          </button>
+            <button class="category-card" type="button"
+              data-category="Food">
+              <strong>🍔 Food</strong>
+              <span>Restaurants and food services</span>
+            </button>
 
-          <button class="category-button" type="button"
-                  data-rockyx-category="fuel">
-            <span class="category-icon">⛽</span>
-            <strong>Fuel</strong><small>Fuel stations</small>
-          </button>
+            <button class="category-card" type="button"
+              data-category="Fuel">
+              <strong>⛽ Fuel</strong>
+              <span>Fuel stations and related services</span>
+            </button>
 
-          <button class="category-button" type="button"
-                  data-rockyx-category="healthcare">
-            <span class="category-icon">🏥</span>
-            <strong>Healthcare</strong><small>Clinics and pharmacies</small>
-          </button>
+            <button class="category-card" type="button"
+              data-category="Services">
+              <strong>🧰 Services</strong>
+              <span>Professional and local services</span>
+            </button>
 
-          <button class="category-button" type="button"
-                  data-rockyx-category="businesses">
-            <span class="category-icon">🏢</span>
-            <strong>Businesses</strong><small>Local businesses</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="shopping">
-            <span class="category-icon">🛍️</span>
-            <strong>Shopping</strong><small>Products and shops</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="hotels">
-            <span class="category-icon">🏨</span>
-            <strong>Hotels</strong><small>Places to stay</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="services">
-            <span class="category-icon">🛠️</span>
-            <strong>Services</strong><small>Help and repairs</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="entertainment">
-            <span class="category-icon">🎭</span>
-            <strong>Entertainment</strong><small>Things to do</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="education">
-            <span class="category-icon">🎓</span>
-            <strong>Education</strong><small>Schools and learning</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="beauty">
-            <span class="category-icon">💇</span>
-            <strong>Beauty</strong><small>Salons and wellness</small>
-          </button>
-
-          <button class="category-button" type="button"
-                  data-rockyx-category="emergency">
-            <span class="category-icon">🚨</span>
-            <strong>Emergency</strong><small>Emergency resources</small>
-          </button>
-        </div>
-
-        <h2 class="page-heading" style="margin-top:28px">More to discover</h2>
-
-        <div class="discovery-links">
-          <button class="discovery-link" type="button" data-nav="Music">
-            <span>🎵</span><strong>Music</strong>
-          </button>
-
-          <button class="discovery-link" type="button" data-nav="Marketplace">
-            <span>🛍️</span><strong>Marketplace</strong>
-          </button>
-
-          <button class="discovery-link" type="button" data-nav="Studio">
-            <span>🎬</span><strong>Creator Studio</strong>
-          </button>
-        </div>
-      </section>
-
-      <!-- STUDIO -->
-      <section id="page-Studio" class="app-page" hidden>
-        <div class="feature-panel">
-          <h2>🎬 RockyX Studio</h2>
-          <p>
-            Import videos to preview clips and experiment with the current
-            browser-based editing foundation.
-          </p>
-        </div>
-      </section>
-
-      <!-- INBOX -->
-      <section id="page-Inbox" class="app-page" hidden>
-        <h1 class="page-heading">Inbox</h1>
-        <div class="feature-panel">
-          <h2>💬 Messages and notifications</h2>
-          <p>
-            Your inbox screen is ready for integration with the messaging
-            and notification modules.
-          </p>
-          <p>Real accounts and messages are not connected yet.</p>
-        </div>
-      </section>
-
-      <!-- PROFILE -->
-      <section id="page-Profile" class="app-page" hidden>
-        <h1 class="page-heading">Profile</h1>
-
-        <div class="profile-card">
-          <div class="avatar">R</div>
-          <div>
-            <h2 style="margin:0 0 5px">RockyX User</h2>
-            <p class="muted" style="margin:0">@yourusername</p>
+            <button class="category-card" type="button"
+              data-category="Other">
+              <strong>🌍 Other</strong>
+              <span>More places and discoveries</span>
+            </button>
           </div>
-        </div>
+        </section>
 
-        <div class="feature-panel" style="margin-top:16px">
-          <h2>Your account</h2>
-          <p>Posts, saved videos, creator status and settings will be connected here.</p>
-          <button class="secondary-button" type="button"
-                  data-profile-action="settings">Account settings</button>
-        </div>
-      </section>
+        <section id="page-Studio" class="screen">
+          <div id="rockyx-create-root">
+            <div class="screen-message">
+              <h2>Create on RockyX</h2>
+              <p class="muted">
+                Your creation tools will load through the
+                module system.
+              </p>
+              <button
+                class="primary-button"
+                type="button"
+                data-action="load-create"
+              >
+                Open Create
+              </button>
+            </div>
+          </div>
+        </section>
 
-      <!-- MUSIC -->
-      <section id="page-Music" class="app-page" hidden>
-        <h1 class="page-heading">🎵 Music</h1>
-        <div class="feature-panel">
-          <h2>Discover your next sound</h2>
-          <p>
-            This screen is ready for the RockyX music player, artists,
-            albums and playlists.
-          </p>
-          <p>The music catalog and playback services are not connected yet.</p>
-        </div>
-      </section>
+        <section id="page-Inbox" class="screen">
+          <div class="screen-message">
+            <h2>Inbox</h2>
+            <p class="muted">
+              Messages and notifications will be connected
+              through their modules.
+            </p>
+          </div>
+        </section>
 
-      <!-- MARKETPLACE -->
-      <section id="page-Marketplace" class="app-page" hidden>
-        <h1 class="page-heading">🛍️ Marketplace</h1>
-        <div class="feature-panel">
-          <h2>Discover products</h2>
-          <p>
-            This screen is ready for product listings, seller profiles,
-            shopping carts and orders.
-          </p>
-          <p>Live products and payments are not connected yet.</p>
-        </div>
-      </section>
+        <section id="page-Profile" class="screen">
+          <div class="screen-message">
+            <h2>Your Profile</h2>
+            <p class="muted">
+              Profile details and account settings will load
+              when the profile module is connected.
+            </p>
+          </div>
+        </section>
 
-      <!-- WALLET -->
-      <section id="page-Wallet" class="app-page" hidden>
-        <h1 class="page-heading">💰 Wallet</h1>
-        <div class="feature-panel">
-          <h2>Your RockyX wallet</h2>
-          <p>
-            Earnings, balances, commissions and payouts will appear here
-            after secure backend integration.
-          </p>
-          <p>No real financial transactions are performed by this prototype.</p>
-        </div>
-      </section>
-    </main>
+        <section id="page-Music" class="screen">
+          <div class="screen-message">
+            <h2>RockyX Music</h2>
+            <p class="muted">
+              Music discovery and audio tools will be
+              connected through their modules.
+            </p>
+          </div>
+        </section>
+
+        <section id="page-Marketplace" class="screen">
+          <div class="screen-message">
+            <h2>Marketplace</h2>
+            <p class="muted">
+              Business listings, products and services
+              will be connected through their modules.
+            </p>
+          </div>
+        </section>
+
+        <section id="page-Wallet" class="screen">
+          <div class="screen-message">
+            <h2>RockyX Wallet</h2>
+            <p class="muted">
+              Balances, transactions and payouts require
+              secure backend integration.
+            </p>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Mobile navigation">
+      <button type="button" data-nav="Home" class="active">
+        <span class="nav-icon">⌂</span>
+        <span>Home</span>
+      </button>
+
+      <button type="button" data-nav="Explore">
+        <span class="nav-icon">⌕</span>
+        <span>Explore</span>
+      </button>
+
+      <button type="button" data-nav="Studio">
+        <span class="nav-icon">＋</span>
+        <span>Create</span>
+      </button>
+
+      <button type="button" data-nav="Inbox">
+        <span class="nav-icon">♡</span>
+        <span>Inbox</span>
+      </button>
+
+      <button type="button" data-nav="Profile">
+        <span class="nav-icon">♙</span>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+    <div id="app-toast" role="status" aria-live="polite" hidden></div>
   </div>
 
-  <!-- MOBILE NAVIGATION -->
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <button type="button" data-nav="Home" class="active">
-      <span class="nav-icon">🏠</span><span>Home</span>
-    </button>
-
-    <button type="button" data-nav="Explore">
-      <span class="nav-icon">🧭</span><span>Explore</span>
-    </button>
-
-    <button type="button" data-nav="Studio" class="create-nav">
-      <span class="nav-icon">＋</span><span>Create</span>
-    </button>
-
-    <button type="button" data-nav="Inbox">
-      <span class="nav-icon">💬</span><span>Inbox</span>
-    </button>
-
-    <button type="button" data-nav="Profile">
-      <span class="nav-icon">👤</span><span>Profile</span>
-    </button>
-  </nav>
-
-  <div id="app-toast" class="toast" role="status" hidden></div>
-
-  <!--
-    MODULE LOADING
-    The scripts below load the modules we've created.
-    Initialization happens in the application script after they load.
-  -->
-
-  <script src="assets/js/explore.js"></script>
-  <script src="assets/js/video-interactions.js"></script>
-  <script src="assets/js/comment-reactions.js"></script>
-  <script src="assets/js/feed-templates.js"></script>
-  <script src="assets/js/app-router.js"></script>
-  <script src="assets/js/studio-editor.js"></script>
+  <!-- Foundation: registry and manifest -->
   <script src="assets/js/module-registry.js"></script>
+  <script src="assets/js/module-manifest.js"></script>
 
   <script>
     (function () {
       "use strict";
 
+      const modules = window.RockyXModules;
       const toast = document.getElementById("app-toast");
+
       let toastTimer;
 
       function showToast(message) {
@@ -960,282 +677,209 @@
 
         toastTimer = setTimeout(function () {
           toast.hidden = true;
-        }, 2800);
+        }, 3000);
       }
 
-      /*
-       * Navigation
-       */
-      function navigate(screen) {
-        if (window.RockyXAppRouter) {
-          const opened = window.RockyXAppRouter.showScreen(screen);
+      function getScreenName(name) {
+        const aliases = {
+          Create: "Studio",
+          Feed: "Home"
+        };
 
-          if (opened) {
-            initializeScreen(screen);
-            return;
-          }
+        return aliases[name] || name;
+      }
+
+      function navigate(name) {
+        const screenName = getScreenName(name);
+
+        const target = document.getElementById(
+          "page-" + screenName
+        );
+
+        if (!target) {
+          showToast("This screen is not available.");
+          return;
         }
 
-        showToast("This screen could not be opened. Please try again.");
-      }
+        document.querySelectorAll(".screen").forEach(function (screen) {
+          screen.classList.toggle("active", screen === target);
+        });
 
-      function initializeScreen(screen) {
-        if (screen === "Studio" && window.RockyXStudioEditor) {
-          const container = document.getElementById("page-Studio");
+        document.querySelectorAll("[data-nav]").forEach(function (button) {
+          button.classList.toggle(
+            "active",
+            getScreenName(button.dataset.nav) === screenName
+          );
+        });
 
-          if (!container.dataset.studioMounted) {
-            const success = window.RockyXStudioEditor.init({
-              container: container
-            });
-
-            if (success) {
-              container.dataset.studioMounted = "true";
+        if (screenName === "Explore") {
+          loadModule("explore").then(function (module) {
+            if (
+              module &&
+              typeof module.init === "function" &&
+              !target.dataset.exploreInitialized
+            ) {
+              module.init({ container: target });
+              target.dataset.exploreInitialized = "true";
             }
-          }
+          }).catch(function (error) {
+            console.error(error);
+            showToast("Explore could not load.");
+          });
+        }
+      }
+
+      function loadModule(name) {
+        if (!modules) {
+          return Promise.reject(
+            new Error("RockyX module registry is unavailable.")
+          );
         }
 
-        if (screen === "Explore") {
-          initializeExplore();
-        }
+        return modules.load(name);
+      }
+
+      function openCreate() {
+        const root = document.getElementById("rockyx-create-root");
+
+        loadModule("create").then(function (module) {
+          if (!module || typeof module.init !== "function") {
+            throw new Error("Create module has no init() method.");
+          }
+
+          module.init({ container: root });
+        }).catch(function (error) {
+          console.error("RockyX Create module error:", error);
+
+          showToast(
+            "Create is not connected yet. Check the module manifest."
+          );
+        });
       }
 
       document.addEventListener("click", function (event) {
-        const navButton = event.target.closest("[data-nav]");
+        const nav = event.target.closest("[data-nav]");
 
-        if (navButton) {
+        if (nav) {
           event.preventDefault();
-          navigate(navButton.dataset.nav);
+          navigate(nav.dataset.nav);
           return;
         }
 
-        const tab = event.target.closest("[data-feed-tab]");
+        const feedTab = event.target.closest("[data-feed-tab]");
 
-        if (tab) {
-          document.querySelectorAll("[data-feed-tab]").forEach(function (item) {
-            item.classList.toggle("active", item === tab);
+        if (feedTab) {
+          document.querySelectorAll("[data-feed-tab]").forEach(function (tab) {
+            tab.classList.toggle("active", tab === feedTab);
           });
 
-          const feedStatus = document.getElementById("feed-status");
+          const status = document.getElementById("feed-status");
 
-          feedStatus.textContent =
-            tab.dataset.feedTab === "Following"
-              ? "Following feed selected. Followed-creator posts will appear when accounts are connected."
-              : "";
-
-          return;
-        }
-
-        const commentToggle = event.target.closest("[data-comment-toggle]");
-
-        if (commentToggle) {
-          const card = commentToggle.closest(".video-card");
-          const comments = card && card.querySelector(".comments");
-
-          if (comments) {
-            comments.hidden = !comments.hidden;
-          }
+          status.textContent =
+            feedTab.dataset.feedTab === "Following"
+              ? "Following posts will appear when account connections are ready."
+              : feedTab.dataset.feedTab === "LIVE"
+                ? "Live streams will appear when livestreaming is connected."
+                : feedTab.dataset.feedTab === "STEM"
+                  ? "STEM videos will appear when feed categories are connected."
+                  : "";
 
           return;
         }
 
-        const followButton = event.target.closest(".follow-button");
-
-        if (followButton) {
-          const following = followButton.dataset.following === "true";
-
-          followButton.dataset.following = String(!following);
-          followButton.textContent = following ? "Follow" : "Following";
-          followButton.setAttribute("aria-pressed", String(!following));
-
-          return;
-        }
-
-        const shareButton = event.target.closest("[data-share]");
-
-        if (shareButton) {
-          const card = shareButton.closest(".video-card");
-          const text = card
-            ? card.querySelector(".video-caption")?.textContent || "RockyX"
-            : "RockyX";
-
-          if (navigator.share) {
-            navigator.share({
-              title: "RockyX",
-              text: text,
-              url: location.href
-            }).catch(function () {});
-          } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(location.href)
-              .then(function () {
-                showToast("Link copied.");
-              })
-              .catch(function () {
-                showToast("Sharing is not available in this browser.");
-              });
-          } else {
-            showToast("Sharing is not available in this browser.");
-          }
-
-          return;
-        }
-
-        const profileAction = event.target.closest("[data-profile-action]");
-
-        if (profileAction) {
-          showToast("Account settings will be connected in a later step.");
-        }
-      });
-
-      /*
-       * Demo comment submission.
-       */
-      document.addEventListener("submit", function (event) {
-        const form = event.target.closest(".comment-form");
-
-        if (!form) return;
-
-        event.preventDefault();
-
-        const input = form.querySelector('input[name="comment"]');
-        const value = input.value.trim();
-
-        if (!value) return;
-
-        const comment = document.createElement("div");
-        comment.className = "comment-item";
-        comment.dataset.comment = "";
-
-        const username = document.createElement("strong");
-        username.textContent = "@you";
-
-        comment.appendChild(username);
-        comment.appendChild(document.createTextNode(" " + value));
-
-        form.parentNode.insertBefore(comment, form);
-        input.value = "";
-
-        showToast("Comment added to this page.");
-      });
-
-      /*
-       * Templates in the For You feed.
-       */
-      function initializeTemplates() {
-        const module = window.RockyXFeedTemplates;
-        const slot = document.getElementById("feed-template-slot");
-
-        if (!module || !slot || slot.dataset.initialized) return;
-
-        module.addStyles();
-
-        const section = module.render(slot);
-
-        if (section) {
-          slot.dataset.initialized = "true";
-        }
-
-        module.init(document);
-      }
-
-      /*
-       * Video and comment interactions.
-       */
-      function initializeInteractions() {
-        if (window.RockyXVideoInteractions) {
-          window.RockyXVideoInteractions.init(document);
-        }
-
-        if (window.RockyXCommentReactions) {
-          window.RockyXCommentReactions.init(document);
-        }
-      }
-
-      /*
-       * Explore integration.
-       * The existing Explore module is initialized if it exposes
-       * the expected public API. Category routing is a separate module.
-       */
-      function initializeExplore() {
-        const module = window.RockyXExplore;
-        const container = document.getElementById("page-Explore");
-
-        if (!module || !container || container.dataset.exploreInitialized) {
-          return;
-        }
-
-        if (typeof module.init === "function") {
-          try {
-            module.init({ container: container });
-            container.dataset.exploreInitialized = "true";
-          } catch (error) {
-            console.error("RockyX Explore initialization failed:", error);
-            showToast("Explore map could not initialize. Check the Explore module.");
-          }
-        }
-      }
-
-      /*
-       * Module events.
-       */
-      document.addEventListener("rockyx:template-request", function (event) {
-        const template = event.detail && event.detail.template;
-
-        navigate("Studio");
-
-        if (template) {
-          showToast("Selected template: " + template.title +
-                    ". Applying templates will be connected next.");
-        } else {
-          showToast("Opening the selected template.");
-        }
-      });
-
-      document.addEventListener("rockyx:open-studio", function () {
-        navigate("Studio");
-      });
-
-      document.addEventListener("rockyx:category-opened", function (event) {
-        const category = event.detail && event.detail.category;
+        const category = event.target.closest("[data-category]");
 
         if (category) {
-          showToast(category.name + " page opened. Map results need integration.");
+          showToast(
+            category.dataset.category +
+            " discovery will be connected to Explore."
+          );
+          return;
+        }
+
+        if (event.target.closest("[data-action='load-create']")) {
+          openCreate();
+          return;
+        }
+
+        if (event.target.closest("[data-share]")) {
+          const shareData = {
+            title: "RockyX",
+            text: "One World. One Platform.",
+            url: window.location.href
+          };
+
+          if (navigator.share) {
+            navigator.share(shareData).catch(function () {});
+          } else if (
+            navigator.clipboard &&
+            navigator.clipboard.writeText
+          ) {
+            navigator.clipboard.writeText(
+              window.location.href
+            ).then(function () {
+              showToast("Link copied.");
+            }).catch(function () {
+              showToast("Sharing is unavailable.");
+            });
+          } else {
+            showToast("Sharing is unavailable in this browser.");
+          }
         }
       });
 
-      document.addEventListener("rockyx:category-location-request", function () {
-        showToast("Location and nearby results need map-service integration.");
-      });
+      document.addEventListener(
+        "rockyx:open-template-editor",
+        function () {
+          loadModule("templateEditor").then(function (module) {
+            if (!module || typeof module.init !== "function") {
+              throw new Error("Template Editor is not initialized.");
+            }
 
-      document.addEventListener("rockyx:category-open-maps", function () {
-        showToast("Directions will be connected when category map results are integrated.");
-      });
-
-      /*
-       * Initialize modules once the page is ready.
-       */
-      function startApp() {
-        if (window.RockyXAppRouter) {
-          window.RockyXAppRouter.init({
-            root: document.getElementById("app-main")
+            module.init({
+              container: document.getElementById("rockyx-create-root")
+            });
+          }).catch(function (error) {
+            console.error(error);
+            showToast("Template Editor could not load.");
           });
         }
+      );
 
-        initializeInteractions();
-        initializeTemplates();
+      document.addEventListener(
+        "rockyx:open-template-creator-centre",
+        function () {
+          loadModule("templateCreatorCentre").then(function (module) {
+            if (!module || typeof module.init !== "function") {
+              throw new Error("Creator Centre is unavailable.");
+            }
 
-        document.querySelectorAll("[data-nav='Home']").forEach(function (button) {
-          button.classList.add("active");
-        });
-
-        if (window.RockyXAppRouter) {
-          window.RockyXAppRouter.showScreen("Home");
+            module.init({
+              container: document.getElementById("rockyx-create-root")
+            });
+          }).catch(function (error) {
+            console.error(error);
+            showToast("Creator Centre could not load.");
+          });
         }
-      }
+      );
 
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startApp, { once: true });
-      } else {
-        startApp();
+      document.addEventListener("DOMContentLoaded", function () {
+        if (modules && window.RockyXModuleManifest) {
+          modules.loadManifest(window.RockyXModuleManifest);
+        }
+
+        navigate("Home");
+      });
+
+      // Also support browsers where this script executes
+      // after DOMContentLoaded has already fired.
+      if (document.readyState !== "loading") {
+        if (modules && window.RockyXModuleManifest) {
+          modules.loadManifest(window.RockyXModuleManifest);
+        }
+
+        navigate("Home");
       }
     })();
   </script>
