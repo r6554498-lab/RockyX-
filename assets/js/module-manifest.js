@@ -69,7 +69,13 @@
       src: "assets/js/profile-menu.js",
       global: "RockyXProfileMenu",
       autoLoad: false
-    }
+    },
+    {
+  name: "effects",
+  src: "assets/js/effects.js",
+  global: "RockyXEffects",
+  autoLoad: false
+  }
   ];
 
 })(window);
