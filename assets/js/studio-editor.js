@@ -754,6 +754,15 @@
       saveDraft();
       return;
     }
+    
+    if (target.hasAttribute("data-rx-studio-effects")) {
+  if (typeof window.RockyXOpenEffects === "function") {
+    window.RockyXOpenEffects(state.root);
+  } else {
+    setStatus("Effects module is not available.");
+  }
+  return;
+}
 
     if (target.hasAttribute("data-rx-studio-remove-selected")) {
       if (state.selectedClipId !== null) {
