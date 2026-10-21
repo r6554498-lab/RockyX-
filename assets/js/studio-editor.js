@@ -1,7 +1,7 @@
-/* =========================================================
-   ROCKYX STUDIO EDITOR
-   Browser-based video editing foundation.
-   ========================================================= */
+/* ==========================================================
+   ROCKYX CREATE STUDIO
+   Modular browser-based video editor
+   ========================================================== */
 
 (function () {
   "use strict";
@@ -12,948 +12,860 @@
     clips: [],
     selectedClipId: null,
     nextClipId: 1,
-    audioFile: null,
     textOverlays: [],
     filter: "none",
     speed: 1,
-    playing: false,
-    objectUrls: new Set()
+    objectUrls: new Set(),
+    root: null,
+    preview: null,
+    fileInput: null,
+    destroyed: false
   };
 
-  let root = null;
-  let preview = null;
-  let timeline = null;
-  let fileInput = null;
-  let audioInput = null;
-  let statusElement = null;
+  const filters = {
+    none: "none",
+    warm: "sepia(18%) saturate(115%)",
+    cool: "saturate(90%) hue-rotate(10deg)",
+    mono: "grayscale(100%)",
+    vivid: "saturate(145%) contrast(108%)",
+    soft: "brightness(105%) saturate(90%)"
+  };
+
+  const styles = `
+    .rx-studio {
+      background: #0b0b10;
+      color: #fff;
+      min-height: 100%;
+      padding: 16px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    .rx-studio * {
+      box-sizing: border-box;
+    }
+
+    .rx-studio-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .rx-studio-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .rx-studio-subtitle {
+      color: #a5a5b5;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .rx-studio-button {
+      border: 0;
+      border-radius: 11px;
+      padding: 11px 14px;
+      background: #25232e;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .rx-studio-button.primary {
+      background: #a855f7;
+      color: white;
+    }
+
+    .rx-studio-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .rx-studio-preview {
+      width: 100%;
+      aspect-ratio: 9 / 14;
+      max-height: 58vh;
+      background: #17171e;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+    }
+
+    .rx-studio-preview video,
+    .rx-studio-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .rx-studio-empty {
+      text-align: center;
+      padding: 24px;
+      color: #aaaabb;
+      line-height: 1.6;
+    }
+
+    .rx-studio-overlay {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 42%;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 2px 5px #000;
+      overflow-wrap: anywhere;
+      pointer-events: none;
+    }
+
+    .rx-studio-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .rx-studio-section {
+      margin-top: 22px;
+    }
+
+    .rx-studio-section h3 {
+      font-size: 15px;
+      margin: 0 0 12px;
+    }
+
+    .rx-studio-timeline {
+      display: flex;
+      gap: 9px;
+      overflow-x: auto;
+      padding: 3px 0 12px;
+    }
+
+    .rx-studio-clip {
+      position: relative;
+      flex: 0 0 112px;
+      min-height: 120px;
+      background: #1a1922;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .rx-studio-clip.selected {
+      border-color: #c084fc;
+    }
+
+    .rx-studio-clip img,
+    .rx-studio-clip video {
+      display: block;
+      width: 100%;
+      height: 88px;
+      object-fit: cover;
+    }
+
+    .rx-studio-clip-name {
+      display: block;
+      padding: 7px;
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .rx-studio-clip-remove {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+      border: 0;
+      border-radius: 50%;
+      background: #111;
+      color: white;
+      width: 27px;
+      height: 27px;
+      cursor: pointer;
+    }
+
+    .rx-studio-field {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #383744;
+      border-radius: 10px;
+      background: #17161f;
+      color: white;
+      margin: 6px 0 12px;
+      font: inherit;
+    }
+
+    .rx-studio-label {
+      display: block;
+      color: #c7c5d1;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    .rx-studio-status {
+      color: #c4b5fd;
+      font-size: 12px;
+      line-height: 1.5;
+      min-height: 18px;
+      margin-top: 10px;
+    }
+
+    .rx-studio-note {
+      color: #9c9baa;
+      font-size: 11px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .rx-studio-hidden {
+      display: none !important;
+    }
+  `;
 
   function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, character => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    })[character]);
+    return String(value).replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+    });
   }
 
-  function createEditor(container) {
-    container.innerHTML = `
-      <section class="rx-studio">
-        <header class="rx-studio-header">
-          <div>
-            <h1>RockyX Studio</h1>
-            <p>Create something amazing.</p>
-          </div>
-          <button type="button" data-rx-action="export">
-            Export
-          </button>
-        </header>
-
-        <div class="rx-studio-preview">
-          <video class="rx-studio-video"
-            playsinline controls></video>
-          <div class="rx-studio-empty">
-            <div style="font-size:42px">🎬</div>
-            <p>Import a video to begin editing.</p>
-          </div>
-        </div>
-
-        <div class="rx-studio-toolbar">
-          <button type="button" data-rx-action="import-video">
-            ＋ Video
-          </button>
-          <button type="button" data-rx-action="import-audio">
-            🎵 Audio
-          </button>
-          <button type="button" data-rx-action="add-text">
-            T Text
-          </button>
-        </div>
-
-        <section class="rx-studio-panel">
-          <h2>Timeline</h2>
-          <p class="rx-studio-hint">
-            Select a clip to edit its settings.
-          </p>
-          <div class="rx-studio-timeline"></div>
-        </section>
-
-        <section class="rx-studio-panel rx-studio-tools">
-          <h2>Editing tools</h2>
-
-          <div class="rx-studio-tool-grid">
-            <button type="button" data-rx-action="trim">
-              ✂️ Trim
-            </button>
-            <button type="button" data-rx-action="split">
-              ⫽ Split
-            </button>
-            <button type="button" data-rx-action="speed">
-              ⏩ Speed
-            </button>
-            <button type="button" data-rx-action="filter">
-              🎨 Filters
-            </button>
-            <button type="button" data-rx-action="rotate">
-              🔄 Rotate
-            </button>
-            <button type="button" data-rx-action="reverse">
-              ⏪ Reverse
-            </button>
-            <button type="button" data-rx-action="remove">
-              🗑️ Remove clip
-            </button>
-          </div>
-
-          <div class="rx-studio-settings"></div>
-        </section>
-
-        <p class="rx-studio-status" role="status">
-          Ready to create.
-        </p>
-
-        <input type="file"
-          class="rx-studio-video-input"
-          accept="video/*"
-          multiple hidden>
-
-        <input type="file"
-          class="rx-studio-audio-input"
-          accept="audio/*"
-          hidden>
-      </section>
-    `;
-
-    addStyles();
-
-    root = container;
-    preview = root.querySelector(".rx-studio-video");
-    timeline = root.querySelector(".rx-studio-timeline");
-    fileInput = root.querySelector(".rx-studio-video-input");
-    audioInput = root.querySelector(".rx-studio-audio-input");
-    statusElement = root.querySelector(".rx-studio-status");
-
-    root.addEventListener("click", handleAction);
-
-    fileInput.addEventListener("change", event => {
-      importVideos(event.target.files);
-      fileInput.value = "";
-    });
-
-    audioInput.addEventListener("change", event => {
-      importAudio(event.target.files?.[0]);
-      audioInput.value = "";
-    });
-
-    preview.addEventListener("loadedmetadata", () => {
-      const clip = getSelectedClip();
-
-      if (clip) {
-        clip.duration = Number.isFinite(preview.duration)
-          ? preview.duration
-          : 0;
-
-        renderTimeline();
-      }
-    });
-
-    preview.addEventListener("play", () => {
-      state.playing = true;
-    });
-
-    preview.addEventListener("pause", () => {
-      state.playing = false;
-    });
-
-    renderTimeline();
-  }
-
-  function addStyles() {
-    if (document.getElementById("rx-studio-styles")) return;
-
-    const style = document.createElement("style");
-    style.id = "rx-studio-styles";
-
-    style.textContent = `
-      .rx-studio {
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 16px 12px 100px;
-        color: #fff;
-        background: #111;
-        font-family: system-ui, sans-serif;
-      }
-
-      .rx-studio * {
-        box-sizing: border-box;
-      }
-
-      .rx-studio-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      .rx-studio-header h1 {
-        margin: 0;
-        font-size: 23px;
-      }
-
-      .rx-studio-header p {
-        margin: 5px 0 0;
-        color: #aaa;
-        font-size: 13px;
-      }
-
-      .rx-studio button {
-        padding: 11px 13px;
-        border: 1px solid #383838;
-        border-radius: 10px;
-        background: #242424;
-        color: #fff;
-        font-weight: 650;
-        cursor: pointer;
-      }
-
-      .rx-studio button:active {
-        transform: scale(.98);
-      }
-
-      .rx-studio-header button,
-      .rx-studio .rx-studio-toolbar button:last-child {
-        background: #7544c8;
-        border-color: #7544c8;
-      }
-
-      .rx-studio-preview {
-        position: relative;
-        display: grid;
-        place-items: center;
-        width: 100%;
-        min-height: 250px;
-        max-height: 540px;
-        overflow: hidden;
-        border-radius: 14px;
-        background: #050505;
-      }
-
-      .rx-studio-video {
-        display: none;
-        width: 100%;
-        max-height: 540px;
-        object-fit: contain;
-      }
-
-      .rx-studio-preview.has-video .rx-studio-video {
-        display: block;
-      }
-
-      .rx-studio-preview.has-video .rx-studio-empty {
-        display: none;
-      }
-
-      .rx-studio-empty {
-        padding: 40px 12px;
-        text-align: center;
-        color: #aaa;
-      }
-
-      .rx-studio-toolbar {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        margin: 12px 0 20px;
-      }
-
-      .rx-studio-panel {
-        margin-top: 18px;
-        padding: 14px;
-        border: 1px solid #303030;
-        border-radius: 14px;
-        background: #191919;
-      }
-
-      .rx-studio-panel h2 {
-        margin: 0 0 12px;
-        font-size: 17px;
-      }
-
-      .rx-studio-hint {
-        color: #aaa;
-        font-size: 12px;
-      }
-
-      .rx-studio-timeline {
-        display: flex;
-        gap: 8px;
-        min-height: 65px;
-        overflow-x: auto;
-        padding: 4px 0;
-      }
-
-      .rx-studio-clip {
-        flex: 0 0 130px;
-        min-width: 130px;
-        text-align: left;
-        background: #292929 !important;
-      }
-
-      .rx-studio-clip.selected {
-        border-color: #a777ff;
-        box-shadow: 0 0 0 1px #a777ff;
-      }
-
-      .rx-studio-clip small {
-        display: block;
-        margin-top: 5px;
-        color: #aaa;
-        font-weight: 400;
-      }
-
-      .rx-studio-tool-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .rx-studio-settings {
-        margin-top: 14px;
-      }
-
-      .rx-studio-settings label {
-        display: block;
-        margin: 12px 0;
-        color: #ddd;
-        font-size: 13px;
-      }
-
-      .rx-studio-settings input,
-      .rx-studio-settings select {
-        display: block;
-        width: 100%;
-        margin-top: 7px;
-        padding: 11px;
-        border: 1px solid #444;
-        border-radius: 8px;
-        color: #fff;
-        background: #222;
-      }
-
-      .rx-studio-status {
-        color: #c7a7ff;
-        font-size: 13px;
-        line-height: 1.5;
-      }
-
-      @media (min-width: 650px) {
-        .rx-studio {
-          padding: 24px;
-        }
-
-        .rx-studio-preview {
-          min-height: 400px;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function setStatus(message) {
-    if (statusElement) statusElement.textContent = message;
+  function getClip(id) {
+    return state.clips.find(function (clip) {
+      return clip.id === id;
+    }) || null;
   }
 
   function getSelectedClip() {
-    return state.clips.find(
-      clip => clip.id === state.selectedClipId
-    ) || null;
+    return getClip(state.selectedClipId);
   }
 
-  function importVideos(files) {
-    const list = Array.from(files || []).filter(file =>
-      file.type.startsWith("video/")
+  function setStatus(message) {
+    if (!state.root) return;
+
+    const element = state.root.querySelector(
+      "[data-rx-studio-status]"
     );
 
-    if (!list.length) {
-      setStatus("Choose a valid video file.");
+    if (element) element.textContent = message;
+  }
+
+  function ensureStyles() {
+    if (document.getElementById("rx-studio-editor-styles")) {
       return;
     }
 
-    list.forEach(file => {
+    const style = document.createElement("style");
+    style.id = "rx-studio-editor-styles";
+    style.textContent = styles;
+    document.head.appendChild(style);
+  }
+
+  function formatDuration(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return "Duration unavailable";
+    }
+
+    const minutes = Math.floor(seconds / 60);
+    const remaining = Math.floor(seconds % 60);
+
+    return minutes + ":" + String(remaining).padStart(2, "0");
+  }
+
+  function releaseClip(clip) {
+    if (!clip || !clip.url) return;
+
+    URL.revokeObjectURL(clip.url);
+    state.objectUrls.delete(clip.url);
+  }
+
+  function addFiles(fileList) {
+    const files = Array.from(fileList || []);
+    const supported = files.filter(function (file) {
+      return file.type.startsWith("video/") ||
+        file.type.startsWith("image/");
+    });
+
+    if (!supported.length) {
+      setStatus("Choose a supported video or image file.");
+      return;
+    }
+
+    supported.forEach(function (file) {
       const url = URL.createObjectURL(file);
+
       state.objectUrls.add(url);
 
       const clip = {
-        id: "clip-" + state.nextClipId++,
+        id: state.nextClipId++,
+        file: file,
         name: file.name,
-        file,
-        url,
-        duration: 0,
-        start: 0,
-        end: null,
-        rotation: 0,
-        speed: 1,
-        filter: "none",
-        reverseRequested: false
+        type: file.type,
+        url: url,
+        duration: file.type.startsWith("image/") ? 0 : null
       };
 
       state.clips.push(clip);
 
-      if (!state.selectedClipId) {
+      if (state.selectedClipId === null) {
         state.selectedClipId = clip.id;
       }
     });
 
-    loadSelectedClip();
     renderTimeline();
+    renderPreview();
 
     setStatus(
-      list.length + " video clip(s) imported. Select a clip to edit."
+      supported.length + " media item(s) added. " +
+      "Changes are currently held in this editing session."
     );
   }
 
-  function importAudio(file) {
-    if (!file || !file.type.startsWith("audio/")) {
-      setStatus("Choose a valid audio file.");
-      return;
-    }
+  function renderPreview() {
+    if (!state.root) return;
 
-    state.audioFile = file;
-
-    setStatus(
-      "Audio selected: " + file.name +
-      ". Audio mixing and export need further implementation."
+    const preview = state.root.querySelector(
+      "[data-rx-studio-preview]"
     );
 
-    renderSettings();
-  }
+    if (!preview) return;
 
-  function loadSelectedClip() {
+    preview.innerHTML = "";
+
     const clip = getSelectedClip();
 
     if (!clip) {
-      preview.pause();
-      preview.removeAttribute("src");
-      preview.load();
+      preview.innerHTML = `
+        <div class="rx-studio-empty">
+          <div style="font-size:40px">＋</div>
+          <strong>Your creation starts here</strong>
+          <div>Upload videos or photos to begin editing.</div>
+        </div>
+      `;
 
-      root.querySelector(".rx-studio-preview")
-        .classList.remove("has-video");
-
-      renderSettings();
+      state.preview = null;
       return;
     }
 
-    root.querySelector(".rx-studio-preview")
-      .classList.add("has-video");
+    let media;
 
-    preview.src = clip.url;
-    preview.playbackRate = clip.speed || 1;
-    preview.style.filter = filterToCSS(clip.filter);
-    preview.style.transform = "rotate(" + clip.rotation + "deg)";
+    if (clip.type.startsWith("video/")) {
+      media = document.createElement("video");
+      media.controls = true;
+      media.playsInline = true;
+      media.preload = "metadata";
+    } else {
+      media = document.createElement("img");
+      media.alt = clip.name;
+    }
 
-    preview.load();
+    media.src = clip.url;
+    media.style.filter = filters[state.filter] || "none";
 
-    renderSettings();
+    if (clip.type.startsWith("video/")) {
+      media.playbackRate = state.speed;
+
+      media.addEventListener("loadedmetadata", function () {
+        clip.duration = media.duration;
+        renderTimeline();
+      }, { once: true });
+    }
+
+    preview.appendChild(media);
+    state.preview = media;
+
+    const overlay = state.textOverlays
+      .filter(function (item) {
+        return item.clipId === clip.id;
+      })
+      .map(function (item) {
+        return item.text;
+      })
+      .join("\n");
+
+    if (overlay) {
+      const text = document.createElement("div");
+      text.className = "rx-studio-overlay";
+      text.textContent = overlay;
+      preview.appendChild(text);
+    }
   }
 
   function renderTimeline() {
+    if (!state.root) return;
+
+    const timeline = state.root.querySelector(
+      "[data-rx-studio-timeline]"
+    );
+
     if (!timeline) return;
 
-    timeline.replaceChildren();
+    timeline.innerHTML = "";
 
-    if (!state.clips.length) {
-      timeline.innerHTML =
-        '<p style="color:#999;font-size:13px">Your clips will appear here.</p>';
-      return;
-    }
+    state.clips.forEach(function (clip) {
+      const card = document.createElement("div");
 
-    state.clips.forEach(clip => {
-      const button = document.createElement("button");
+      card.className = "rx-studio-clip" +
+        (clip.id === state.selectedClipId ? " selected" : "");
 
-      button.type = "button";
-      button.className = "rx-studio-clip";
-      button.classList.toggle(
-        "selected",
-        clip.id === state.selectedClipId
+      card.dataset.clipId = String(clip.id);
+
+      const media = document.createElement(
+        clip.type.startsWith("image/") ? "img" : "video"
       );
 
-      const duration = clip.duration
-        ? clip.duration.toFixed(1) + " sec"
-        : "Loading duration…";
+      media.src = clip.url;
 
-      button.innerHTML =
-        escapeHTML(clip.name) +
-        "<small>" + escapeHTML(duration) + "</small>";
+      if (media.tagName === "VIDEO") {
+        media.muted = true;
+        media.preload = "metadata";
+        media.playsInline = true;
+      } else {
+        media.alt = "";
+      }
 
-      button.addEventListener("click", () => {
-        state.selectedClipId = clip.id;
-        loadSelectedClip();
-        renderTimeline();
-      });
+      const name = document.createElement("span");
+      name.className = "rx-studio-clip-name";
+      name.textContent = clip.name;
 
-      timeline.appendChild(button);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "rx-studio-clip-remove";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", "Remove " + clip.name);
+      remove.dataset.removeClip = String(clip.id);
+
+      card.append(media, name, remove);
+      timeline.appendChild(card);
     });
-  }
 
-  function filterToCSS(filter) {
-    const filters = {
-      none: "none",
-      vivid: "saturate(1.5) contrast(1.1)",
-      mono: "grayscale(1)",
-      warm: "sepia(.25) saturate(1.25)",
-      cool: "hue-rotate(15deg) saturate(1.1)",
-      faded: "contrast(.85) brightness(1.08) saturate(.8)"
-    };
-
-    return filters[filter] || "none";
-  }
-
-  function renderSettings() {
-    const panel = root.querySelector(".rx-studio-settings");
-    if (!panel) return;
-
-    const clip = getSelectedClip();
-
-    if (!clip) {
-      panel.innerHTML =
-        '<p style="color:#999;font-size:13px">Import and select a clip to see its settings.</p>';
-      return;
-    }
-
-    panel.innerHTML = `
-      <h3 style="font-size:14px">Selected clip</h3>
-
-      <label>
-        Clip name
-        <input type="text" data-rx-setting="name"
-          value="${escapeHTML(clip.name)}">
-      </label>
-
-      <label>
-        Trim start (seconds)
-        <input type="number" min="0" step="0.1"
-          data-rx-setting="start"
-          value="${clip.start}">
-      </label>
-
-      <label>
-        Trim end (seconds)
-        <input type="number" min="0" step="0.1"
-          data-rx-setting="end"
-          value="${clip.end ?? clip.duration ?? 0}">
-      </label>
-
-      <label>
-        Playback speed
-        <select data-rx-setting="speed">
-          <option value="0.25" ${clip.speed === .25 ? "selected" : ""}>0.25×</option>
-          <option value="0.5" ${clip.speed === .5 ? "selected" : ""}>0.5×</option>
-          <option value="1" ${clip.speed === 1 ? "selected" : ""}>1×</option>
-          <option value="1.5" ${clip.speed === 1.5 ? "selected" : ""}>1.5×</option>
-          <option value="2" ${clip.speed === 2 ? "selected" : ""}>2×</option>
-        </select>
-      </label>
-
-      <label>
-        Visual filter
-        <select data-rx-setting="filter">
-          <option value="none">Original</option>
-          <option value="vivid">Vivid</option>
-          <option value="mono">Black and white</option>
-          <option value="warm">Warm</option>
-          <option value="cool">Cool</option>
-          <option value="faded">Faded</option>
-        </select>
-      </label>
-
-      <label>
-        Rotation
-        <select data-rx-setting="rotation">
-          <option value="0">0°</option>
-          <option value="90">90°</option>
-          <option value="180">180°</option>
-          <option value="270">270°</option>
-        </select>
-      </label>
-
-      <button type="button" data-rx-action="apply-settings">
-        Apply settings
-      </button>
-    `;
-
-    panel.querySelector('[data-rx-setting="filter"]').value =
-      clip.filter;
-
-    panel.querySelector('[data-rx-setting="rotation"]').value =
-      String(clip.rotation);
-  }
-
-  function handleAction(event) {
-    const button = event.target.closest("[data-rx-action]");
-    if (!button || !root.contains(button)) return;
-
-    const action = button.dataset.rxAction;
-
-    switch (action) {
-      case "import-video":
-        fileInput.click();
-        break;
-
-      case "import-audio":
-        audioInput.click();
-        break;
-
-      case "add-text":
-        addTextOverlay();
-        break;
-
-      case "trim":
-        showTrimSettings();
-        break;
-
-      case "split":
-        splitClip();
-        break;
-
-      case "speed":
-        showSpeedSettings();
-        break;
-
-      case "filter":
-        showFilterSettings();
-        break;
-
-      case "rotate":
-        rotateClip();
-        break;
-
-      case "reverse":
-        requestReverse();
-        break;
-
-      case "remove":
-        removeClip();
-        break;
-
-      case "apply-settings":
-        applySettings();
-        break;
-
-      case "export":
-        exportProject();
-        break;
-    }
-  }
-
-  function showTrimSettings() {
-    const clip = getSelectedClip();
-
-    if (!clip) {
-      setStatus("Import and select a clip first.");
-      return;
-    }
-
-    renderSettings();
-    setStatus(
-      "Set the trim start and end values, then select Apply settings. " +
-      "The preview will seek to the chosen start."
+    const count = state.root.querySelector(
+      "[data-rx-studio-clip-count]"
     );
-  }
 
-  function showSpeedSettings() {
-    const clip = getSelectedClip();
-
-    if (!clip) {
-      setStatus("Import and select a clip first.");
-      return;
+    if (count) {
+      count.textContent = state.clips.length + " media item(s)";
     }
-
-    renderSettings();
-
-    setStatus(
-      "Choose a playback speed and select Apply settings."
-    );
   }
 
-  function showFilterSettings() {
-    const clip = getSelectedClip();
+  function removeClip(id) {
+    const clip = getClip(id);
 
-    if (!clip) {
-      setStatus("Import and select a clip first.");
-      return;
-    }
-
-    renderSettings();
-
-    setStatus(
-      "Choose a visual filter and select Apply settings. " +
-      "This changes the preview only; it is not yet baked into an exported video."
-    );
-  }
-
-  function applySettings() {
-    const clip = getSelectedClip();
     if (!clip) return;
 
-    const panel = root.querySelector(".rx-studio-settings");
+    releaseClip(clip);
 
-    const name = panel.querySelector('[data-rx-setting="name"]');
-    const start = panel.querySelector('[data-rx-setting="start"]');
-    const end = panel.querySelector('[data-rx-setting="end"]');
-    const speed = panel.querySelector('[data-rx-setting="speed"]');
-    const filter = panel.querySelector('[data-rx-setting="filter"]');
-    const rotation = panel.querySelector('[data-rx-setting="rotation"]');
+    state.clips = state.clips.filter(function (item) {
+      return item.id !== id;
+    });
 
-    const startValue = Math.max(0, Number(start.value) || 0);
-    const endValue = Number(end.value);
+    state.textOverlays = state.textOverlays.filter(function (item) {
+      return item.clipId !== id;
+    });
 
-    if (
-      clip.duration > 0 &&
-      (startValue >= endValue || endValue > clip.duration)
-    ) {
-      setStatus("Check your trim values. End must be after start and within the clip.");
+    if (state.selectedClipId === id) {
+      state.selectedClipId = state.clips.length
+        ? state.clips[0].id
+        : null;
+    }
+
+    renderTimeline();
+    renderPreview();
+
+    setStatus("Media item removed.");
+  }
+
+  function moveClip(id, direction) {
+    const index = state.clips.findIndex(function (clip) {
+      return clip.id === id;
+    });
+
+    if (index < 0) return;
+
+    const target = index + direction;
+
+    if (target < 0 || target >= state.clips.length) return;
+
+    const current = state.clips[index];
+
+    state.clips[index] = state.clips[target];
+    state.clips[target] = current;
+
+    renderTimeline();
+    setStatus("Clip order updated in the editing session.");
+  }
+
+  function addText() {
+    const input = state.root.querySelector(
+      "[data-rx-studio-text]"
+    );
+
+    const value = input ? input.value.trim() : "";
+    const clip = getSelectedClip();
+
+    if (!clip) {
+      setStatus("Add or select media before adding text.");
       return;
     }
 
-    clip.name = name.value.trim() || clip.name;
-    clip.start = startValue;
-    clip.end = Number.isFinite(endValue) ? endValue : clip.duration;
-    clip.speed = Number(speed.value) || 1;
-    clip.filter = filter.value;
-    clip.rotation = Number(rotation.value) || 0;
+    if (!value) {
+      setStatus("Enter some text first.");
+      return;
+    }
 
-    preview.playbackRate = clip.speed;
-    preview.style.filter = filterToCSS(clip.filter);
-    preview.style.transform = "rotate(" + clip.rotation + "deg)";
+    state.textOverlays.push({
+      clipId: clip.id,
+      text: value
+    });
+
+    input.value = "";
+
+    renderPreview();
+    setStatus("Text overlay added to the preview.");
+  }
+
+  function saveDraft() {
+    const draft = {
+      version: 1,
+      savedAt: new Date().toISOString(),
+      clips: state.clips.map(function (clip) {
+        return {
+          name: clip.name,
+          type: clip.type
+        };
+      }),
+      filter: state.filter,
+      speed: state.speed,
+      textOverlays: state.textOverlays
+    };
 
     try {
-      preview.currentTime = clip.start;
-    } catch (_) {
-      // The media may still be loading.
+      const drafts = JSON.parse(
+        localStorage.getItem("rockyx_editor_drafts") || "[]"
+      );
+
+      drafts.unshift(draft);
+
+      localStorage.setItem(
+        "rockyx_editor_drafts",
+        JSON.stringify(drafts.slice(0, 30))
+      );
+
+      setStatus(
+        "Draft information saved. Original media files are not " +
+        "embedded, so reopen the files to continue editing."
+      );
+    } catch (error) {
+      setStatus("Unable to save draft information on this device.");
     }
+  }
+
+  function buildInterface(container) {
+    container.innerHTML = `
+      <section class="rx-studio">
+        <header class="rx-studio-header">
+          <div>
+            <h2 class="rx-studio-title">RockyX Create Studio</h2>
+            <div class="rx-studio-subtitle">
+              Edit videos and photos
+            </div>
+          </div>
+
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-upload>
+            ＋ Add media
+          </button>
+        </header>
+
+        <input class="rx-studio-hidden"
+               type="file"
+               accept="video/*,image/*"
+               multiple
+               data-rx-studio-file-input>
+
+        <div class="rx-studio-preview"
+             data-rx-studio-preview></div>
+
+        <div class="rx-studio-toolbar">
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-add-text>
+            ＋ Text
+          </button>
+
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-filter="none">
+            Original
+          </button>
+
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-filter="warm">
+            Warm
+          </button>
+
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-filter="cool">
+            Cool
+          </button>
+
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-filter="mono">
+            Mono
+          </button>
+
+          <button class="rx-studio-button"
+                  type="button"
+                  data-rx-studio-filter="vivid">
+            Vivid
+          </button>
+        </div>
+
+        <label class="rx-studio-label" for="rx-studio-text">
+          Text overlay
+        </label>
+
+        <input id="rx-studio-text"
+               class="rx-studio-field"
+               type="text"
+               maxlength="120"
+               placeholder="Write something..."
+               data-rx-studio-text>
+
+        <div class="rx-studio-section">
+          <h3>Playback speed</h3>
+
+          <div class="rx-studio-toolbar">
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-speed="0.5">0.5×</button>
+
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-speed="1">1×</button>
+
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-speed="1.5">1.5×</button>
+
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-speed="2">2×</button>
+          </div>
+        </div>
+
+        <div class="rx-studio-section">
+          <h3>Timeline</h3>
+
+          <div data-rx-studio-clip-count>0 media items</div>
+
+          <div class="rx-studio-timeline"
+               data-rx-studio-timeline></div>
+
+          <div class="rx-studio-toolbar">
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-move="-1">
+              ← Move left
+            </button>
+
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-move="1">
+              Move right →
+            </button>
+
+            <button class="rx-studio-button"
+                    type="button"
+                    data-rx-studio-remove-selected>
+              Remove selected
+            </button>
+          </div>
+        </div>
+
+        <div class="rx-studio-section">
+          <h3>Save your work</h3>
+
+          <div class="rx-studio-toolbar">
+            <button class="rx-studio-button primary"
+                    type="button"
+                    data-rx-studio-save>
+              Save draft
+            </button>
+          </div>
+
+          <div class="rx-studio-note">
+            This editor currently supports media selection, preview,
+            ordering, basic preview filters, text overlays, and
+            playback-speed controls. It does not yet render a final
+            edited video or mix audio.
+          </div>
+
+          <div class="rx-studio-status"
+               role="status"
+               aria-live="polite"
+               data-rx-studio-status></div>
+        </div>
+      </section>
+    `;
+
+    state.root = container;
+    state.fileInput = container.querySelector(
+      "[data-rx-studio-file-input]"
+    );
 
     renderTimeline();
-    renderSettings();
-
-    setStatus(
-      "Settings applied to the preview. Export rendering is not yet implemented."
-    );
+    renderPreview();
   }
 
-  function splitClip() {
-    const clip = getSelectedClip();
+  function handleClick(event) {
+    const target = event.target.closest("button");
 
-    if (!clip) {
-      setStatus("Import and select a clip first.");
+    if (!target || !state.root.contains(target)) return;
+
+    if (target.hasAttribute("data-rx-studio-upload")) {
+      state.fileInput.click();
       return;
     }
 
-    if (!Number.isFinite(preview.currentTime) ||
-        preview.currentTime <= clip.start ||
-        (clip.end && preview.currentTime >= clip.end)) {
-      setStatus("Play or seek into the selected clip, then press Split.");
+    if (target.hasAttribute("data-rx-studio-add-text")) {
+      addText();
       return;
     }
 
-    const splitAt = preview.currentTime;
+    if (target.hasAttribute("data-rx-studio-save")) {
+      saveDraft();
+      return;
+    }
 
-    const secondClip = {
-      ...clip,
-      id: "clip-" + state.nextClipId++,
-      name: clip.name.replace(/\.[^.]+$/, "") + " (part 2)",
-      start: splitAt,
-      end: clip.end || clip.duration
-    };
+    if (target.hasAttribute("data-rx-studio-remove-selected")) {
+      if (state.selectedClipId !== null) {
+        removeClip(state.selectedClipId);
+      }
+      return;
+    }
 
-    clip.end = splitAt;
+    if (target.hasAttribute("data-rx-studio-move")) {
+      if (state.selectedClipId !== null) {
+        moveClip(
+          state.selectedClipId,
+          Number(target.dataset.rxStudioMove)
+        );
+      }
+      return;
+    }
 
-    const index = state.clips.findIndex(item => item.id === clip.id);
+    if (target.hasAttribute("data-rx-studio-filter")) {
+      state.filter = target.dataset.rxStudioFilter;
+      renderPreview();
+      setStatus("Preview filter changed.");
+      return;
+    }
 
-    state.clips.splice(index + 1, 0, secondClip);
+    if (target.hasAttribute("data-rx-studio-speed")) {
+      state.speed = Number(target.dataset.rxStudioSpeed);
 
-    state.selectedClipId = secondClip.id;
+      if (state.preview && state.preview.tagName === "VIDEO") {
+        state.preview.playbackRate = state.speed;
+      }
+
+      setStatus("Playback speed set to " + state.speed + "×.");
+      return;
+    }
+
+    if (target.hasAttribute("data-remove-clip")) {
+      event.stopPropagation();
+      removeClip(Number(target.dataset.removeClip));
+      return;
+    }
+  }
+
+  function handleTimelineClick(event) {
+    const card = event.target.closest("[data-clip-id]");
+
+    if (!card || !state.root.contains(card)) return;
+
+    if (event.target.closest("[data-remove-clip]")) return;
+
+    state.selectedClipId = Number(card.dataset.clipId);
 
     renderTimeline();
-    renderSettings();
-
-    setStatus(
-      "Timeline split created. Both parts still reference the original video; separate exported segments are not yet rendered."
-    );
+    renderPreview();
   }
 
-  function rotateClip() {
-    const clip = getSelectedClip();
-
-    if (!clip) {
-      setStatus("Import and select a clip first.");
-      return;
-    }
-
-    clip.rotation = (clip.rotation + 90) % 360;
-
-    preview.style.transform = "rotate(" + clip.rotation + "deg)";
-
-    renderSettings();
-
-    setStatus(
-      "Preview rotated to " + clip.rotation +
-      "°. Export rendering is not yet implemented."
-    );
-  }
-
-  function requestReverse() {
-    const clip = getSelectedClip();
-
-    if (!clip) {
-      setStatus("Import and select a clip first.");
-      return;
-    }
-
-    clip.reverseRequested = !clip.reverseRequested;
-
-    setStatus(
-      clip.reverseRequested
-        ? "Reverse requested. True reverse playback requires media processing, which is not implemented yet."
-        : "Reverse request cleared."
-    );
-  }
-
-  function removeClip() {
-    const clip = getSelectedClip();
-
-    if (!clip) {
-      setStatus("Select a clip to remove.");
-      return;
-    }
-
-    const index = state.clips.findIndex(item => item.id === clip.id);
-
-    state.clips.splice(index, 1);
-
-    state.selectedClipId =
-      state.clips[Math.max(0, index - 1)]?.id || null;
-
-    loadSelectedClip();
-    renderTimeline();
-
-    setStatus("Clip removed from the timeline.");
-  }
-
-  function addTextOverlay() {
-    const text = window.prompt("Enter the text for your video:");
-
-    if (!text || !text.trim()) return;
-
-    const overlay = {
-      id: "text-" + Date.now(),
-      text: text.trim()
-    };
-
-    state.textOverlays.push(overlay);
-
-    setStatus(
-      'Text added to the project: "' + overlay.text +
-      '". Text overlay rendering and export are not yet implemented.'
-    );
-
-    emit("text-overlay-added", overlay);
-  }
-
-  function exportProject() {
-    if (!state.clips.length) {
-      setStatus("Import at least one video before exporting.");
-      return;
-    }
-
-    setStatus(
-      "Your project has " + state.clips.length +
-      " clip(s). Final video rendering and downloadable export " +
-      "require a rendering engine and are not implemented yet."
-    );
-
-    emit("export-requested", {
-      clips: state.clips.map(clip => ({
-        id: clip.id,
-        name: clip.name,
-        start: clip.start,
-        end: clip.end,
-        speed: clip.speed,
-        filter: clip.filter,
-        rotation: clip.rotation
-      })),
-      audioSelected: Boolean(state.audioFile),
-      textOverlays: state.textOverlays.map(item => ({ ...item }))
-    });
-  }
-
-  function emit(name, detail) {
-    document.dispatchEvent(
-      new CustomEvent("rockyx:studio-" + name, { detail })
-    );
-  }
-
-  function init(options = {}) {
-    let container = options.container || "#page-Studio";
-
-    if (typeof container === "string") {
-      container = document.querySelector(container);
-    }
+  function init(options) {
+    const container = options && options.container
+      ? options.container
+      : document.getElementById("page-Studio");
 
     if (!container) {
-      console.warn(
-        "[RockyX Studio] Container not found. Create the Studio page first."
-      );
+      console.warn("RockyX Studio: container not found.");
       return false;
     }
 
-    createEditor(container);
+    ensureStyles();
+
+    state.destroyed = false;
+
+    buildInterface(container);
+
+    container.addEventListener("click", handleClick);
+    container.addEventListener("click", handleTimelineClick);
+
+    state.fileInput.addEventListener("change", function () {
+      addFiles(state.fileInput.files);
+      state.fileInput.value = "";
+    });
 
     return true;
   }
 
   function destroy() {
-    if (preview) preview.pause();
+    state.objectUrls.forEach(function (url) {
+      URL.revokeObjectURL(url);
+    });
 
-    state.objectUrls.forEach(url => URL.revokeObjectURL(url));
     state.objectUrls.clear();
-
-    if (root) root.replaceChildren();
-
-    root = null;
-    preview = null;
-    timeline = null;
-    fileInput = null;
-    audioInput = null;
-    statusElement = null;
-
     state.clips = [];
-    state.selectedClipId = null;
-    state.audioFile = null;
     state.textOverlays = [];
+    state.selectedClipId = null;
+    state.root = null;
+    state.preview = null;
+    state.fileInput = null;
+    state.destroyed = true;
   }
 
   window.RockyXStudioEditor = {
-    init,
-    destroy,
-    getProject: () => ({
-      clips: state.clips.map(clip => ({
-        id: clip.id,
-        name: clip.name,
-        duration: clip.duration,
-        start: clip.start,
-        end: clip.end,
-        speed: clip.speed,
-        filter: clip.filter,
-        rotation: clip.rotation,
-        reverseRequested: clip.reverseRequested
-      })),
-      audioSelected: Boolean(state.audioFile),
-      textOverlays: state.textOverlays.map(item => ({ ...item }))
-    })
+    init: init,
+    destroy: destroy,
+
+    getState: function () {
+      return {
+        clipCount: state.clips.length,
+        selectedClipId: state.selectedClipId,
+        filter: state.filter,
+        speed: state.speed
+      };
+    },
+
+    addFiles: addFiles,
+    saveDraft: saveDraft
   };
 })();
