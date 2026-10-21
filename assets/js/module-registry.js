@@ -1,285 +1,169 @@
-/* ==========================================
-   ROCKYX MODULE REGISTRY
-   Version 2.0
-   ========================================== */
-
 (function (window, document) {
   "use strict";
 
-  const modules = Object.create(null);
-  const loading = Object.create(null);
-  const manifest = Object.create(null);
+  const modules = {};
+  const loading = {};
 
-  let manifestLoaded = false;
+  const api = {
+    register: function (name, module) {
+      modules[name] = module;
+      return module;
+    },
 
-  function getGlobal(path) {
-    return path.split(".").reduce(function (value, key) {
-      return value ? value[key] : undefined;
-    }, window);
-  }
-
-  function register(name, module) {
-    if (typeof name !== "string" || !name.trim()) {
-      throw new Error("RockyX: A module name is required.");
-    }
-
-    if (!module || typeof module !== "object") {
-      throw new Error("RockyX: A valid module object is required.");
-    }
-
-    modules[name] = module;
-
-    window.dispatchEvent(
-      new CustomEvent("rockyx:module-registered", {
-        detail: { name: name }
-      })
-    );
-
-    return module;
-  }
-
-  function get(name) {
-    if (modules[name]) {
-      return modules[name];
-    }
-
-    const definition = manifest[name];
-
-    if (definition && definition.global) {
-      const globalModule = getGlobal(definition.global);
-
-      if (globalModule) {
-        modules[name] = globalModule;
-        return globalModule;
+    get: function (name) {
+      if (modules[name]) {
+        return modules[name];
       }
-    }
 
-    return null;
-  }
+      const manifest = window.RockyXModuleManifest || [];
+      const entry = manifest.find(function (item) {
+        return item.name === name;
+      });
 
-  function has(name) {
-    return Boolean(get(name));
-  }
+      if (entry && entry.global && window[entry.global]) {
+        modules[name] = window[entry.global];
+        return modules[name];
+      }
 
-  function list() {
-    return Array.from(
-      new Set(
-        Object.keys(manifest).concat(Object.keys(modules))
-      )
-    );
-  }
+      return null;
+    },
 
-  function loadManifest(entries) {
-    if (!Array.isArray(entries)) {
-      throw new Error(
-        "RockyX: The module manifest must be an array."
-      );
-    }
+    has: function (name) {
+      return !!this.get(name);
+    },
 
-    entries.forEach(function (entry) {
-      if (!entry || !entry.name || !entry.src) {
-        console.warn(
-          "RockyX: Skipping an invalid manifest entry.",
-          entry
+    list: function () {
+      return Object.keys(modules);
+    },
+
+    loadManifest: function (entries) {
+      window.RockyXModuleManifest = entries || [];
+      return window.RockyXModuleManifest;
+    },
+
+    loadScript: function (name, src) {
+      const existingModule = this.get(name);
+
+      if (existingModule) {
+        return Promise.resolve(existingModule);
+      }
+
+      if (loading[name]) {
+        return loading[name];
+      }
+
+      loading[name] = new Promise(function (resolve, reject) {
+        let script = document.querySelector(
+          'script[data-rockyx-module="' + name + '"]'
         );
 
-        return;
-      }
+        if (script && script.dataset.rockyxLoaded === "true") {
+          const loadedModule = api.get(name);
 
-      manifest[entry.name] = Object.assign(
-        {},
-        entry
-      );
-    });
+          if (loadedModule) {
+            resolve(loadedModule);
+          } else {
+            reject(new Error("Module did not register: " + name));
+          }
 
-    manifestLoaded = true;
-
-    window.dispatchEvent(
-      new CustomEvent("rockyx:manifest-loaded", {
-        detail: { modules: list() }
-      })
-    );
-
-    return list();
-  }
-
-  function loadScript(name, src) {
-    const definition = manifest[name];
-
-    if (!src && definition) {
-      src = definition.src;
-    }
-
-    if (!src) {
-      return Promise.reject(
-        new Error("RockyX: No script path for " + name)
-      );
-    }
-
-    const existingModule = get(name);
-
-    if (existingModule) {
-      return Promise.resolve(existingModule);
-    }
-
-    if (loading[name]) {
-      return loading[name];
-    }
-
-    loading[name] = new Promise(function (resolve, reject) {
-      const selector =
-        'script[data-rockyx-module="' + name + '"]';
-
-      let script = document.querySelector(selector);
-      let created = false;
-
-      function cleanup() {
-        script.removeEventListener("load", onLoad);
-        script.removeEventListener("error", onError);
-      }
-
-      function onLoad() {
-        cleanup();
-
-        const module = get(name);
-
-        if (module) {
-          resolve(module);
           return;
         }
 
-        delete loading[name];
+        function onLoad() {
+          script.dataset.rockyxLoaded = "true";
 
-        reject(
-          new Error(
-            "RockyX: Script loaded, but module was not found: " +
-            name
-          )
-        );
-      }
+          const loadedModule = api.get(name);
 
-      function onError() {
-        cleanup();
-        delete loading[name];
-
-        reject(
-          new Error(
-            "RockyX: Failed to load " + name + " from " + src
-          )
-        );
-      }
-
-      if (!script) {
-        script = document.createElement("script");
-        script.src = src;
-        script.async = true;
-        script.dataset.rockyxModule = name;
-        created = true;
-      }
-
-      script.addEventListener("load", onLoad);
-      script.addEventListener("error", onError);
-
-      if (created) {
-        document.head.appendChild(script);
-      } else if (script.dataset.rockyxLoaded === "true") {
-        cleanup();
-
-        const module = get(name);
-
-        if (module) {
-          resolve(module);
-        } else {
-          delete loading[name];
-
-          reject(
-            new Error(
-              "RockyX: Previously loaded module is unavailable: " +
-              name
-            )
-          );
+          if (loadedModule) {
+            resolve(loadedModule);
+          } else {
+            reject(new Error("Module did not register: " + name));
+          }
         }
+
+        function onError() {
+          delete loading[name];
+          reject(new Error("Could not load module: " + name));
+        }
+
+        if (!script) {
+          script = document.createElement("script");
+          script.src = src;
+          script.dataset.rockyxModule = name;
+          script.onload = onLoad;
+          script.onerror = onError;
+          document.body.appendChild(script);
+          return;
+        }
+
+        script.addEventListener("load", onLoad, { once: true });
+        script.addEventListener("error", onError, { once: true });
+      }).catch(function (error) {
+        delete loading[name];
+        throw error;
+      });
+
+      return loading[name];
+    },
+
+    load: function (name) {
+      const existingModule = this.get(name);
+
+      if (existingModule) {
+        return Promise.resolve(existingModule);
       }
-    });
 
-    return loading[name];
-  }
+      const manifest = window.RockyXModuleManifest || [];
+      const entry = manifest.find(function (item) {
+        return item.name === name;
+      });
 
-  function load(name) {
-    const existingModule = get(name);
+      if (!entry) {
+        return Promise.reject(
+          new Error("Module not found in manifest: " + name)
+        );
+      }
 
-    if (existingModule) {
-      return Promise.resolve(existingModule);
-    }
+      return this.loadScript(name, entry.src);
+    },
 
-    const definition = manifest[name];
+    init: function (name, options) {
+      return this.load(name).then(function (module) {
+        if (typeof module.init === "function") {
+          return module.init(options || {});
+        }
 
-    if (!definition) {
-      return Promise.reject(
-        new Error("RockyX: Unknown module: " + name)
+        return module;
+      });
+    },
+
+    destroy: function (name) {
+      const module = this.get(name);
+
+      if (module && typeof module.destroy === "function") {
+        module.destroy();
+      }
+
+      return true;
+    },
+
+    loadAutoModules: function () {
+      const manifest = window.RockyXModuleManifest || [];
+
+      return Promise.all(
+        manifest
+          .filter(function (entry) {
+            return entry.autoLoad === true;
+          })
+          .map(function (entry) {
+            return api.load(entry.name).catch(function (error) {
+              console.error(error);
+              return null;
+            });
+          })
       );
     }
-
-    return loadScript(name, definition.src);
-  }
-
-  function init(name, options) {
-    return load(name).then(function (module) {
-      if (typeof module.init !== "function") {
-        throw new Error(
-          "RockyX: Module has no init() method: " + name
-        );
-      }
-
-      return module.init(options || {});
-    });
-  }
-
-  function destroy(name) {
-    const module = get(name);
-
-    if (!module) {
-      return false;
-    }
-
-    if (typeof module.destroy === "function") {
-      module.destroy();
-    }
-
-    return true;
-  }
-
-  function loadAutoModules() {
-    if (!manifestLoaded) {
-      return Promise.resolve([]);
-    }
-
-    const names = list().filter(function (name) {
-      return manifest[name] &&
-        manifest[name].autoLoad === true;
-    });
-
-    return Promise.all(
-      names.map(function (name) {
-        return load(name).catch(function (error) {
-          console.error(error);
-          return null;
-        });
-      })
-    );
-  }
-
-  window.RockyXModules = {
-    register: register,
-    get: get,
-    has: has,
-    list: list,
-    loadManifest: loadManifest,
-    loadScript: loadScript,
-    load: load,
-    init: init,
-    destroy: destroy,
-    loadAutoModules: loadAutoModules
   };
 
+  window.RockyXModules = api;
 })(window, document);
