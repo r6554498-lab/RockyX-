@@ -1,364 +1,421 @@
-/* ======================================================
-   ROCKYX CREATE HOME
-   Modular creation hub for videos, photos and templates
-   ====================================================== */
+/* ==========================================
+   ROCKYX CREATE MODULE
+   Version 2.0
+   ========================================== */
 
-(function () {
+(function (window, document) {
   "use strict";
-
-  if (window.RockyXCreate) return;
 
   const state = {
     container: null,
-    initialized: false,
-    category: "For You",
-    search: "",
+    activeView: "home",
     templates: [],
-    drafts: []
+    category: "All",
+    search: "",
+    initialized: false
   };
 
-  const categories = [
-    "Viral Song",
-    "Trendy",
-    "AI",
-    "Monthly Recap",
-    "Daily",
-    "Transitions",
-    "Photos",
-    "Beat Sync"
+  const DEFAULT_TEMPLATES = [
+    {
+      id: "rx-template-001",
+      title: "Daily Memories",
+      category: "Lifestyle",
+      access: "Free",
+      clips: 3,
+      description: "Create a short daily memories video.",
+      usage: 0
+    },
+    {
+      id: "rx-template-002",
+      title: "Music Moments",
+      category: "Music",
+      access: "Free",
+      clips: 4,
+      description: "Build a video around your favourite music.",
+      usage: 0
+    },
+    {
+      id: "rx-template-003",
+      title: "Travel Story",
+      category: "Travel",
+      access: "Pro",
+      clips: 5,
+      description: "Bring your travel memories together.",
+      usage: 0
+    },
+    {
+      id: "rx-template-004",
+      title: "Food Showcase",
+      category: "Food",
+      access: "Free",
+      clips: 3,
+      description: "Showcase food, restaurants and recipes.",
+      usage: 0
+    },
+    {
+      id: "rx-template-005",
+      title: "Fashion Edit",
+      category: "Fashion",
+      access: "Pro",
+      clips: 4,
+      description: "Create a fashion or outfit video.",
+      usage: 0
+    },
+    {
+      id: "rx-template-006",
+      title: "Business Promo",
+      category: "Business",
+      access: "Free",
+      clips: 4,
+      description: "Prepare a short business promotion.",
+      usage: 0
+    }
   ];
 
-  const styles = `
-    .rx-create-home {
-      min-height: 100%;
-      padding: 20px 14px 35px;
-      background: #08080b;
+  const CATEGORIES = [
+    "All",
+    "Trending",
+    "Music",
+    "Lifestyle",
+    "Travel",
+    "Food",
+    "Fashion",
+    "Business"
+  ];
+
+  const STYLES = `
+    .rx-create {
       color: #fff;
+      background: #100e18;
+      padding: 16px;
+      border-radius: 16px;
       font-family: Arial, sans-serif;
+    }
+
+    .rx-create * {
       box-sizing: border-box;
     }
 
-    .rx-create-home * {
-      box-sizing: border-box;
+    .rx-create button,
+    .rx-create input {
+      font: inherit;
+    }
+
+    .rx-create button {
+      cursor: pointer;
     }
 
     .rx-create-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 27px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
-    .rx-create-close {
-      border: 0;
-      background: transparent;
-      color: white;
-      font-size: 29px;
-      cursor: pointer;
-    }
-
-    .rx-create-heading {
+    .rx-create-header h1 {
       margin: 0;
-      text-align: center;
-      font-size: 25px;
-      font-weight: 900;
-      letter-spacing: 1px;
+      font-size: 24px;
     }
 
-    .rx-create-header-spacer {
-      width: 35px;
+    .rx-create-muted {
+      color: #aaa4ba;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .rx-create-icon-button {
+      background: #211d2d;
+      color: #fff;
+      border: 1px solid #393147;
+      border-radius: 11px;
+      padding: 10px 13px;
     }
 
     .rx-create-tools {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 5px;
-      margin-bottom: 25px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+      margin-bottom: 22px;
     }
 
     .rx-create-tool {
-      padding: 8px 2px;
-      border: 0;
-      border-radius: 12px;
-      background: transparent;
-      color: white;
-      text-align: center;
-      cursor: pointer;
-      min-width: 0;
+      min-height: 85px;
+      padding: 12px 5px;
+      background: #201b2b;
+      color: #fff;
+      border: 1px solid #332b42;
+      border-radius: 13px;
+      font-size: 12px;
     }
 
-    .rx-create-tool-icon {
-      display: grid;
-      place-items: center;
-      height: 37px;
-      font-size: 25px;
-      font-weight: 800;
-      margin-bottom: 7px;
-    }
-
-    .rx-create-tool-name {
+    .rx-create-tool span {
       display: block;
-      font-size: 10px;
-      font-weight: 700;
-      line-height: 1.25;
-      overflow-wrap: anywhere;
-    }
-
-    .rx-create-main-cards {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 115px;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-
-    .rx-create-new-video,
-    .rx-create-drafts {
-      border: 0;
-      border-radius: 17px;
-      min-height: 140px;
-      cursor: pointer;
-      overflow: hidden;
-    }
-
-    .rx-create-new-video {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 9px;
-      background: linear-gradient(115deg, #fff0e8, #e5fbff);
-      color: #101015;
-    }
-
-    .rx-create-plus {
-      font-size: 31px;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .rx-create-card-title {
-      font-size: 21px;
-      font-weight: 900;
-    }
-
-    .rx-create-drafts {
-      background: linear-gradient(150deg, #463366, #17131f);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-    }
-
-    .rx-create-draft-count {
-      font-size: 28px;
-      font-weight: 900;
-    }
-
-    .rx-create-drafts-label {
-      font-size: 17px;
-      font-weight: 800;
-    }
-
-    .rx-create-template-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 15px;
-    }
-
-    .rx-create-template-heading h2 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 900;
-    }
-
-    .rx-create-search-button {
-      border: 0;
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
-      flex-shrink: 0;
-      background: #242429;
-      color: white;
       font-size: 23px;
-      cursor: pointer;
+      margin-bottom: 8px;
     }
 
-    .rx-create-search {
-      display: none;
-      width: 100%;
-      margin-bottom: 14px;
-      padding: 13px;
-      border: 1px solid #393944;
-      border-radius: 12px;
-      background: #18181e;
-      color: white;
-      font-size: 15px;
+    .rx-create-tool:active,
+    .rx-create-card:active {
+      transform: scale(.98);
     }
 
-    .rx-create-search.rx-visible {
-      display: block;
+    .rx-create-section {
+      margin-bottom: 25px;
     }
 
-    .rx-create-category-row {
+    .rx-create-section-title {
       display: flex;
-      gap: 22px;
-      overflow-x: auto;
-      padding: 2px 0 16px;
-      scrollbar-width: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
-    .rx-create-category-row::-webkit-scrollbar {
-      display: none;
+    .rx-create-section-title h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .rx-create-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .rx-create-card {
+      background: #211b2d;
+      color: #fff;
+      border: 1px solid #392f4b;
+      border-radius: 15px;
+      padding: 17px 12px;
+      text-align: left;
+      min-height: 120px;
+    }
+
+    .rx-create-card-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .rx-create-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .rx-create-categories {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .rx-create-category {
       flex-shrink: 0;
-      border: 0;
-      padding: 3px 0;
-      background: transparent;
-      color: #9999a2;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
+      background: #211d2d;
+      color: #c8bfd8;
+      border: 1px solid #393147;
+      border-radius: 20px;
+      padding: 9px 13px;
+      font-size: 12px;
     }
 
-    .rx-create-category.rx-active {
-      color: white;
+    .rx-create-category.active {
+      background: #6941b8;
+      color: #fff;
+      border-color: #a78bfa;
+    }
+
+    .rx-create-search {
+      width: 100%;
+      background: #211d2d;
+      color: #fff;
+      border: 1px solid #393147;
+      border-radius: 11px;
+      padding: 12px;
+      margin-bottom: 14px;
     }
 
     .rx-create-template-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: start;
-      gap: 18px 12px;
+      gap: 11px;
     }
 
     .rx-create-template {
       min-width: 0;
-      cursor: pointer;
+      background: #201b2b;
+      border: 1px solid #332b42;
+      border-radius: 13px;
+      overflow: hidden;
     }
 
     .rx-create-template-preview {
-      width: 100%;
       aspect-ratio: 3 / 4;
-      border-radius: 15px;
-      overflow: hidden;
-      position: relative;
-      display: grid;
-      place-items: center;
-      padding: 12px;
-      background: linear-gradient(145deg, #3a2b46, #131318);
-      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
-    }
-
-    .rx-create-template-preview img,
-    .rx-create-template-preview video {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      inset: 0;
-      object-fit: cover;
-    }
-
-    .rx-create-template-preview::after {
-      content: "";
-      position: absolute;
-      inset: 40% 0 0;
-      background: linear-gradient(transparent, rgba(0,0,0,.55));
-      pointer-events: none;
-    }
-
-    .rx-create-template-art {
-      position: relative;
-      z-index: 1;
-      font-size: 24px;
-      font-weight: 900;
+      padding: 10px;
+      background: linear-gradient(145deg, #49306d, #171321);
       overflow-wrap: anywhere;
     }
 
-    .rx-create-template-name {
-      margin: 9px 0 4px;
+    .rx-create-template-preview span {
+      font-size: 31px;
+      margin-bottom: 12px;
+    }
+
+    .rx-create-template-preview strong {
       font-size: 14px;
-      font-weight: 800;
-      line-height: 1.35;
-      overflow-wrap: anywhere;
     }
 
-    .rx-create-template-meta {
-      color: #9999a5;
+    .rx-create-template-info {
+      padding: 11px;
+    }
+
+    .rx-create-template-info strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .rx-create-template-info small {
+      display: block;
+      color: #aaa4ba;
       font-size: 11px;
       line-height: 1.5;
     }
 
-    .rx-create-template-badge {
+    .rx-create-badge {
       display: inline-block;
-      margin-top: 5px;
+      background: #352849;
+      color: #e1d2ff;
       padding: 4px 7px;
-      border-radius: 6px;
-      background: #33213f;
-      color: #dfb8ff;
+      border-radius: 20px;
       font-size: 10px;
-      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .rx-create-bottom-modes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      position: sticky;
+      bottom: 72px;
+      background: #171321;
+      border: 1px solid #332b42;
+      border-radius: 14px;
+      padding: 8px;
+      margin-top: 22px;
+    }
+
+    .rx-create-mode {
+      background: transparent;
+      color: #aaa4ba;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 4px;
+      font-size: 12px;
+    }
+
+    .rx-create-mode.active {
+      background: #352849;
+      color: #fff;
+    }
+
+    .rx-create-message {
+      padding: 18px;
+      margin: 12px 0;
+      background: #211d2d;
+      border: 1px solid #393147;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .rx-create-primary {
+      background: #8b5cf6;
+      color: white;
+      border: 0;
+      border-radius: 11px;
+      padding: 12px 15px;
+      font-weight: 700;
+    }
+
+    .rx-create-secondary {
+      background: #292438;
+      color: white;
+      border: 1px solid #393147;
+      border-radius: 11px;
+      padding: 11px 14px;
     }
 
     .rx-create-empty {
       grid-column: 1 / -1;
-      padding: 35px 15px;
+      padding: 25px 10px;
       text-align: center;
-      color: #9999a5;
-      line-height: 1.6;
+      color: #aaa4ba;
+      font-size: 13px;
     }
 
-    .rx-create-status {
-      margin-top: 15px;
-      color: #c4b5fd;
-      font-size: 12px;
-      line-height: 1.5;
-    }
+    @media (min-width: 650px) {
+      .rx-create {
+        padding: 22px;
+      }
 
-    @media (min-width: 600px) {
-      .rx-create-home {
-        max-width: 850px;
-        margin: 0 auto;
+      .rx-create-tools {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
       }
 
       .rx-create-template-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-
-      .rx-create-tool-name {
-        font-size: 12px;
-      }
     }
   `;
 
+  function escapeHTML(value) {
+    return String(value == null ? "" : value).replace(
+      /[&<>"']/g,
+      function (character) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[character];
+      }
+    );
+  }
+
   function addStyles() {
-    if (document.getElementById("rx-create-home-styles")) return;
+    if (document.getElementById("rockyx-create-styles")) {
+      return;
+    }
 
     const style = document.createElement("style");
-    style.id = "rx-create-home-styles";
-    style.textContent = styles;
+    style.id = "rockyx-create-styles";
+    style.textContent = STYLES;
     document.head.appendChild(style);
   }
 
-  function escapeHTML(value) {
-    return String(value).replace(/[&<>"']/g, function (character) {
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      }[character];
-    });
+  function getTemplateDrafts() {
+    try {
+      const drafts = JSON.parse(
+        localStorage.getItem("rockyx_template_drafts") || "[]"
+      );
+
+      return Array.isArray(drafts) ? drafts : [];
+    } catch (error) {
+      return [];
+    }
   }
 
-  function readDraftCount() {
+  function getVideoDraftCount() {
     try {
       const drafts = JSON.parse(
         localStorage.getItem("rockyx_editor_drafts") || "[]"
@@ -370,477 +427,567 @@
     }
   }
 
-  function defaultTemplates() {
-    return [
-      {
-        id: "template-1",
-        title: "Beat Sync",
-        category: "Viral Song",
-        description: "A music-driven video concept",
-        clips: 3,
-        usage: null,
-        access: "Free",
-        previewLabel: "BEAT SYNC"
-      },
-      {
-        id: "template-2",
-        title: "Night Vibes",
-        category: "Trendy",
-        description: "A cinematic night-style concept",
-        clips: 1,
-        usage: null,
-        access: "Free",
-        previewLabel: "NIGHT VIBES"
-      },
-      {
-        id: "template-3",
-        title: "Monthly Memories",
-        category: "Monthly Recap",
-        description: "Collect moments into one video",
-        clips: 6,
-        usage: null,
-        access: "Free",
-        previewLabel: "MEMORIES"
-      },
-      {
-        id: "template-4",
-        title: "AI Portrait",
-        category: "AI",
-        description: "An AI-inspired creative concept",
-        clips: 1,
-        usage: null,
-        access: "Pro",
-        previewLabel: "AI PORTRAIT"
-      },
-      {
-        id: "template-5",
-        title: "Daily Moments",
-        category: "Daily",
-        description: "A short daily video concept",
-        clips: 2,
-        usage: null,
-        access: "Free",
-        previewLabel: "DAILY"
-      },
-      {
-        id: "template-6",
-        title: "Smooth Transitions",
-        category: "Transitions",
-        description: "A transition-focused concept",
-        clips: 4,
-        usage: null,
-        access: "Pro",
-        previewLabel: "TRANSITIONS"
-      }
-    ];
+  function getTemplates() {
+    return state.templates.length
+      ? state.templates
+      : DEFAULT_TEMPLATES.slice();
   }
 
-  function renderTemplateCard(template) {
-    return `
-      <article class="rx-create-template"
-               role="button"
-               tabindex="0"
-               data-rx-template-id="${escapeHTML(template.id)}">
+  function setTemplates(templates) {
+    state.templates = Array.isArray(templates)
+      ? templates.slice()
+      : [];
 
-        <div class="rx-create-template-preview">
-          <div class="rx-create-template-art">
-            ${escapeHTML(template.previewLabel || template.title)}
-          </div>
-        </div>
-
-        <div class="rx-create-template-name">
-          ${escapeHTML(template.title)}
-        </div>
-
-        <div class="rx-create-template-meta">
-          ${template.usage == null
-            ? "New template"
-            : escapeHTML(template.usage) + " videos"}
-          · ${Number(template.clips) || 1} clip(s)
-        </div>
-
-        <span class="rx-create-template-badge">
-          ${escapeHTML(template.access || "Free")}
-        </span>
-      </article>
-    `;
+    if (state.activeView === "home") {
+      renderHome();
+    }
   }
 
-  function renderTemplates() {
-    const grid = state.container.querySelector(
-      "[data-rx-create-template-grid]"
-    );
+  function showMessage(message) {
+    const box = state.container &&
+      state.container.querySelector("#rx-create-message");
 
-    if (!grid) return;
+    if (!box) return;
 
-    const query = state.search.toLowerCase().trim();
+    box.textContent = message;
+    box.hidden = false;
+  }
 
-    const filtered = state.templates.filter(function (template) {
-      const matchesCategory =
-        state.category === "For You" ||
+  function clearMessage() {
+    const box = state.container &&
+      state.container.querySelector("#rx-create-message");
+
+    if (box) {
+      box.textContent = "";
+      box.hidden = true;
+    }
+  }
+
+  function renderTemplateCards() {
+    const search = state.search.toLowerCase();
+    const templates = getTemplates().filter(function (template) {
+      const categoryMatch =
+        state.category === "All" ||
+        state.category === "Trending" ||
         template.category === state.category;
 
-      const matchesSearch =
-        !query ||
-        template.title.toLowerCase().includes(query) ||
-        template.category.toLowerCase().includes(query) ||
-        template.description.toLowerCase().includes(query);
+      const searchMatch =
+        String(template.title || template.name || "")
+          .toLowerCase()
+          .includes(search) ||
+        String(template.category || "")
+          .toLowerCase()
+          .includes(search);
 
-      return matchesCategory && matchesSearch;
+      return categoryMatch && searchMatch;
     });
 
-    grid.innerHTML = filtered.length
-      ? filtered.map(renderTemplateCard).join("")
-      : `
+    if (!templates.length) {
+      return `
         <div class="rx-create-empty">
-          No matching templates yet.<br>
-          Try another category or search.
+          No templates match your search.
         </div>
       `;
-  }
-
-  function setStatus(message) {
-    const status = state.container.querySelector(
-      "[data-rx-create-status]"
-    );
-
-    if (status) status.textContent = message;
-  }
-
-  function openEditor() {
-    const editor = window.RockyXStudioEditor;
-
-    if (editor && typeof editor.init === "function") {
-      editor.init({ container: state.container });
-      setStatus("Studio editor opened.");
-      return;
     }
 
-    setStatus(
-      "The editor module isn't connected yet. " +
-      "We'll connect it after the Create screen is installed."
-    );
-  }
+    return templates.map(function (template) {
+      const title = template.title || template.name || "Template";
+      const access = template.access || "Free";
+      const count = Array.isArray(template.clips)
+        ? template.clips.length
+        : Number(template.clips) || 0;
 
-  function handleTool(tool) {
-    const events = {
-      photo: "rockyx:photo-editor",
-      autocut: "rockyx:autocut",
-      captions: "rockyx:captions",
-      ai: "rockyx:ai-tools",
-      cutout: "rockyx:cutout"
-    };
-
-    if (tool === "new-video") {
-      openEditor();
-      return;
-    }
-
-    if (tool === "drafts") {
-      const drafts = readDraftCount();
-
-      setStatus(
-        drafts
-          ? drafts + " draft record(s) saved on this device. " +
-            "Draft reopening still needs to be connected."
-          : "You don't have any saved editor drafts on this device yet."
-      );
-
-      return;
-    }
-
-    const eventName = events[tool];
-
-    if (eventName) {
-      window.dispatchEvent(
-        new CustomEvent(eventName, {
-          detail: { source: "rockyx-create" }
-        })
-      );
-
-      setStatus(
-        "Requested " + tool + ". The feature must be connected " +
-        "before this tool can operate."
-      );
-    }
-  }
-
-  function handleClick(event) {
-    const toolButton = event.target.closest("[data-rx-create-tool]");
-
-    if (toolButton) {
-      handleTool(toolButton.dataset.rxCreateTool);
-      return;
-    }
-
-    const categoryButton = event.target.closest(
-      "[data-rx-create-category]"
-    );
-
-    if (categoryButton) {
-      state.category = categoryButton.dataset.rxCreateCategory;
-
-      state.container.querySelectorAll(
-        "[data-rx-create-category]"
-      ).forEach(function (button) {
-        button.classList.toggle(
-          "rx-active",
-          button === categoryButton
-        );
-      });
-
-      renderTemplates();
-      return;
-    }
-
-    const searchButton = event.target.closest(
-      "[data-rx-create-search-toggle]"
-    );
-
-    if (searchButton) {
-      const input = state.container.querySelector(
-        "[data-rx-create-search]"
-      );
-
-      input.classList.toggle("rx-visible");
-
-      if (input.classList.contains("rx-visible")) {
-        input.focus();
-      } else {
-        input.value = "";
-        state.search = "";
-        renderTemplates();
-      }
-
-      return;
-    }
-
-    const templateCard = event.target.closest(
-      "[data-rx-template-id]"
-    );
-
-    if (templateCard) {
-      const template = state.templates.find(function (item) {
-        return item.id === templateCard.dataset.rxTemplateId;
-      });
-
-      if (!template) return;
-
-      window.dispatchEvent(
-        new CustomEvent("rockyx:template-selected", {
-          detail: {
-            template: template,
-            source: "create"
-          }
-        })
-      );
-
-      setStatus(
-        "Selected " + template.title +
-        ". Template preview and media-slot processing need " +
-        "to be connected to the template engine."
-      );
-    }
-  }
-
-  function handleKeydown(event) {
-    const card = event.target.closest("[data-rx-template-id]");
-
-    if (
-      card &&
-      (event.key === "Enter" || event.key === " ")
-    ) {
-      event.preventDefault();
-      card.click();
-    }
-  }
-
-  function render(container) {
-    state.container = container;
-
-    container.innerHTML = `
-      <section class="rx-create-home">
-        <header class="rx-create-header">
-          <button class="rx-create-close"
-                  type="button"
-                  aria-label="Close Create"
-                  data-rx-create-tool="close">×</button>
-
-          <h1 class="rx-create-heading">CREATE</h1>
-
-          <div class="rx-create-header-spacer"></div>
-        </header>
-
-        <div class="rx-create-tools">
-          <button class="rx-create-tool"
-                  type="button"
-                  data-rx-create-tool="photo">
-            <span class="rx-create-tool-icon">▧</span>
-            <span class="rx-create-tool-name">Photo editor</span>
-          </button>
-
-          <button class="rx-create-tool"
-                  type="button"
-                  data-rx-create-tool="autocut">
-            <span class="rx-create-tool-icon">✦</span>
-            <span class="rx-create-tool-name">AutoCut</span>
-          </button>
-
-          <button class="rx-create-tool"
-                  type="button"
-                  data-rx-create-tool="captions">
-            <span class="rx-create-tool-icon">▤</span>
-            <span class="rx-create-tool-name">Captions</span>
-          </button>
-
-          <button class="rx-create-tool"
-                  type="button"
-                  data-rx-create-tool="ai">
-            <span class="rx-create-tool-icon">AI</span>
-            <span class="rx-create-tool-name">AI Self</span>
-          </button>
-
-          <button class="rx-create-tool"
-                  type="button"
-                  data-rx-create-tool="cutout">
-            <span class="rx-create-tool-icon">◉</span>
-            <span class="rx-create-tool-name">Cutout</span>
-          </button>
-        </div>
-
-        <div class="rx-create-main-cards">
-          <button class="rx-create-new-video"
-                  type="button"
-                  data-rx-create-tool="new-video">
-            <span class="rx-create-plus">＋</span>
-            <span class="rx-create-card-title">New video</span>
-          </button>
-
-          <button class="rx-create-drafts"
-                  type="button"
-                  data-rx-create-tool="drafts">
-            <span class="rx-create-draft-count"
-                  data-rx-create-draft-count>0</span>
-            <span class="rx-create-drafts-label">Drafts</span>
-          </button>
-        </div>
-
-        <section>
-          <div class="rx-create-template-heading">
-            <h2>Templates</h2>
-
-            <button class="rx-create-search-button"
-                    type="button"
-                    aria-label="Search templates"
-                    data-rx-create-search-toggle>⌕</button>
+      return `
+        <button
+          type="button"
+          class="rx-create-template"
+          data-action="use-template"
+          data-template-id="${escapeHTML(template.id)}"
+        >
+          <div class="rx-create-template-preview">
+            <span>▶</span>
+            <strong>${escapeHTML(title)}</strong>
           </div>
 
-          <input class="rx-create-search"
-                 type="search"
-                 placeholder="Search templates..."
-                 aria-label="Search templates"
-                 data-rx-create-search>
+          <div class="rx-create-template-info">
+            <span class="rx-create-badge">
+              ${escapeHTML(access)}
+            </span>
 
-          <div class="rx-create-category-row">
-            ${["For You", ...categories].map(function (category) {
+            <strong>${escapeHTML(title)}</strong>
+
+            <small>
+              ${escapeHTML(template.category || "Other")}
+              · ${count} clip slot(s)
+            </small>
+
+            <small>
+              ${Number(template.usage) || 0} uses recorded
+            </small>
+          </div>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function renderHome() {
+    if (!state.container) return;
+
+    state.activeView = "home";
+
+    const drafts = getTemplateDrafts();
+    const videoDraftCount = getVideoDraftCount();
+
+    state.container.innerHTML = `
+      <div class="rx-create">
+
+        <header class="rx-create-header">
+          <div>
+            <h1>Create</h1>
+            <div class="rx-create-muted">
+              Make something worth sharing.
+            </div>
+          </div>
+
+          <button
+            class="rx-create-icon-button"
+            type="button"
+            data-action="close"
+            aria-label="Close Create"
+          >✕</button>
+        </header>
+
+        <div
+          id="rx-create-message"
+          class="rx-create-message"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <section class="rx-create-section">
+          <div class="rx-create-section-title">
+            <h2>Quick tools</h2>
+          </div>
+
+          <div class="rx-create-tools">
+            <button class="rx-create-tool"
+              type="button" data-action="photo-editor">
+              <span>🖼️</span>
+              Photo Editor
+            </button>
+
+            <button class="rx-create-tool"
+              type="button" data-action="autocut">
+              <span>✂️</span>
+              AutoCut
+            </button>
+
+            <button class="rx-create-tool"
+              type="button" data-action="captions">
+              <span>💬</span>
+              Captions
+            </button>
+
+            <button class="rx-create-tool"
+              type="button" data-action="ai-self">
+              <span>✨</span>
+              AI Self
+            </button>
+
+            <button class="rx-create-tool"
+              type="button" data-action="cutout">
+              <span>🪄</span>
+              Cutout
+            </button>
+          </div>
+        </section>
+
+        <section class="rx-create-section">
+          <div class="rx-create-section-title">
+            <h2>Start creating</h2>
+          </div>
+
+          <div class="rx-create-cards">
+            <button
+              class="rx-create-card"
+              type="button"
+              data-action="new-video"
+            >
+              <div class="rx-create-card-icon">🎬</div>
+              <strong>New Video</strong>
+              <div class="rx-create-muted">
+                Upload clips and start editing.
+              </div>
+            </button>
+
+            <button
+              class="rx-create-card"
+              type="button"
+              data-action="video-drafts"
+            >
+              <div class="rx-create-card-icon">📁</div>
+              <strong>Drafts (${videoDraftCount})</strong>
+              <div class="rx-create-muted">
+                Continue working on saved drafts.
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="rx-create-section">
+          <div class="rx-create-section-title">
+            <h2>Templates</h2>
+
+            <button
+              class="rx-create-icon-button"
+              type="button"
+              data-action="search-focus"
+              aria-label="Search templates"
+            >⌕</button>
+          </div>
+
+          <input
+            class="rx-create-search"
+            id="rx-create-search"
+            type="search"
+            maxlength="100"
+            placeholder="Search templates..."
+            value="${escapeHTML(state.search)}"
+          >
+
+          <div class="rx-create-categories">
+            ${CATEGORIES.map(function (category) {
               return `
-                <button class="rx-create-category ${
-                  category === "For You" ? "rx-active" : ""
-                }"
-                        type="button"
-                        data-rx-create-category="${escapeHTML(category)}">
+                <button
+                  type="button"
+                  class="rx-create-category ${
+                    state.category === category ? "active" : ""
+                  }"
+                  data-category="${escapeHTML(category)}"
+                >
                   ${escapeHTML(category)}
                 </button>
               `;
             }).join("")}
           </div>
 
-          <div class="rx-create-template-grid"
-               data-rx-create-template-grid></div>
+          <div
+            class="rx-create-template-grid"
+            id="rx-create-template-grid"
+          >
+            ${renderTemplateCards()}
+          </div>
 
-          <div class="rx-create-status"
-               role="status"
-               aria-live="polite"
-               data-rx-create-status></div>
+          <div class="rx-create-actions" style="margin-top:14px">
+            <button
+              class="rx-create-secondary"
+              type="button"
+              data-action="my-template-drafts"
+            >
+              My Template Drafts (${drafts.length})
+            </button>
+
+            <button
+              class="rx-create-secondary"
+              type="button"
+              data-action="creator-centre"
+            >
+              Template Creator Centre
+            </button>
+          </div>
         </section>
-      </section>
+
+        <nav class="rx-create-bottom-modes"
+          aria-label="Creation modes">
+
+          <button
+            class="rx-create-mode"
+            type="button"
+            data-action="live"
+          >🔴 LIVE</button>
+
+          <button
+            class="rx-create-mode"
+            type="button"
+            data-action="camera"
+          >📷 CAMERA</button>
+
+          <button
+            class="rx-create-mode active"
+            type="button"
+            data-action="create-mode"
+          >＋ CREATE</button>
+        </nav>
+
+      </div>
     `;
+  }
 
-    state.container.querySelector(
-      "[data-rx-create-draft-count]"
-    ).textContent = readDraftCount();
+  function openModule(name, eventName) {
+    const registry = window.RockyXModules;
 
-    renderTemplates();
+    if (registry && typeof registry.load === "function") {
+      registry.load(name).then(function (module) {
+        if (!module || typeof module.init !== "function") {
+          throw new Error("Module is not ready: " + name);
+        }
+
+        module.init({
+          container: state.container
+        });
+      }).catch(function (error) {
+        console.error("RockyX Create:", error);
+
+        showMessage(
+          "This tool is not connected yet. " +
+          "The module must be integrated before it can open."
+        );
+      });
+
+      return;
+    }
+
+    if (eventName) {
+      state.container.dispatchEvent(
+        new CustomEvent(eventName, {
+          bubbles: true
+        })
+      );
+    } else {
+      showMessage("The module system is not available.");
+    }
+  }
+
+  function selectTemplate(id) {
+    const template = getTemplates().find(function (item) {
+      return String(item.id) === String(id);
+    });
+
+    if (!template) {
+      showMessage("This template could not be found.");
+      return;
+    }
+
+    state.container.dispatchEvent(
+      new CustomEvent("rockyx:template-selected", {
+        bubbles: true,
+        detail: {
+          template: template
+        }
+      })
+    );
+
+    showMessage(
+      "Selected " + (template.title || template.name) +
+      ". Applying media slots and rendering are not connected yet."
+    );
+  }
+
+  function handleClick(event) {
+    if (!state.container) return;
+
+    const category = event.target.closest("[data-category]");
+
+    if (category && category.classList.contains("rx-create-category")) {
+      state.category = category.dataset.category;
+      renderHome();
+      return;
+    }
+
+    const button = event.target.closest("[data-action]");
+
+    if (!button) return;
+
+    const action = button.dataset.action;
+
+    if (action === "search-focus") {
+      const search = state.container.querySelector("#rx-create-search");
+      if (search) search.focus();
+      return;
+    }
+
+    if (action === "use-template") {
+      selectTemplate(button.dataset.templateId);
+      return;
+    }
+
+    if (action === "new-video") {
+      openModule("studioEditor");
+      return;
+    }
+
+    if (action === "creator-centre") {
+      openModule("templateCreatorCentre");
+      return;
+    }
+
+    if (action === "my-template-drafts") {
+      const drafts = getTemplateDrafts();
+
+      showMessage(
+        drafts.length
+          ? "You have " + drafts.length +
+            " locally saved template draft(s)."
+          : "You don't have any saved template drafts yet."
+      );
+
+      return;
+    }
+
+    if (action === "video-drafts") {
+      showMessage(
+        "Draft count is stored locally. Reopening saved media " +
+        "is not connected yet."
+      );
+      return;
+    }
+
+    if (action === "photo-editor") {
+      showMessage("Photo Editor is not connected yet.");
+      return;
+    }
+
+    if (action === "autocut") {
+      showMessage("AutoCut is not connected yet.");
+      return;
+    }
+
+    if (action === "captions") {
+      showMessage("Automatic caption generation is not connected yet.");
+      return;
+    }
+
+    if (action === "ai-self") {
+      showMessage("AI Self is not connected yet.");
+      return;
+    }
+
+    if (action === "cutout") {
+      showMessage("Background Cutout is not connected yet.");
+      return;
+    }
+
+    if (action === "live") {
+      showMessage("Livestreaming will be connected separately.");
+      return;
+    }
+
+    if (action === "camera") {
+      showMessage(
+        "Camera recording requires a camera-capture module."
+      );
+      return;
+    }
+
+    if (action === "create-mode") {
+      renderHome();
+      return;
+    }
+
+    if (action === "close") {
+      state.container.dispatchEvent(
+        new CustomEvent("rockyx:create-close", {
+          bubbles: true
+        })
+      );
+
+      showMessage(
+        "Close navigation will be connected to the app shell."
+      );
+    }
+  }
+
+  function handleInput(event) {
+    if (!event.target.matches("#rx-create-search")) {
+      return;
+    }
+
+    state.search = event.target.value;
+
+    const grid = state.container.querySelector(
+      "#rx-create-template-grid"
+    );
+
+    if (grid) {
+      grid.innerHTML = renderTemplateCards();
+    }
   }
 
   function init(options) {
-    const container = options && options.container
-      ? options.container
-      : document.getElementById("page-Studio");
+    options = options || {};
+
+    const container = options.container ||
+      document.getElementById("rockyx-create-root") ||
+      document.getElementById("page-Studio");
 
     if (!container) {
-      console.warn("RockyX Create: container not found.");
+      console.error(
+        "RockyX Create: Could not find a container."
+      );
+
       return false;
     }
 
-    addStyles();
+    if (
+      state.container &&
+      state.container !== container
+    ) {
+      destroy();
+    } else if (state.container === container) {
+      destroy();
+    }
 
     state.container = container;
-    state.templates = defaultTemplates();
-    state.category = "For You";
-    state.search = "";
 
-    render(container);
-
-    if (!state.initialized) {
-      container.addEventListener("click", handleClick);
-      container.addEventListener("keydown", handleKeydown);
-
-      container.addEventListener("input", function (event) {
-        if (event.target.matches("[data-rx-create-search]")) {
-          state.search = event.target.value;
-          renderTemplates();
-        }
-      });
-
-      state.initialized = true;
+    if (Array.isArray(options.templates)) {
+      state.templates = options.templates.slice();
     }
+
+    if (options.template) {
+      state.activeView = "home";
+    }
+
+    addStyles();
+    renderHome();
+
+    container.addEventListener("click", handleClick);
+    container.addEventListener("input", handleInput);
+
+    state.initialized = true;
 
     return true;
   }
 
-  function setTemplates(templates) {
-    if (!Array.isArray(templates)) return false;
+  function render() {
+    renderHome();
+  }
 
-    state.templates = templates.map(function (template, index) {
-      return {
-        id: String(template.id || "template-" + (index + 1)),
-        title: String(template.title || "Untitled template"),
-        category: String(template.category || "Trendy"),
-        description: String(template.description || ""),
-        clips: Number(template.clips) || 1,
-        usage: template.usage == null ? null : template.usage,
-        access: template.access || "Free",
-        previewLabel: template.previewLabel || template.title
-      };
-    });
+  function destroy() {
+    if (state.container) {
+      state.container.removeEventListener("click", handleClick);
+      state.container.removeEventListener("input", handleInput);
+    }
 
-    if (state.container) renderTemplates();
+    state.container = null;
+    state.initialized = false;
+  }
 
-    return true;
+  function getState() {
+    return {
+      activeView: state.activeView,
+      category: state.category,
+      search: state.search,
+      templates: getTemplates().slice()
+    };
   }
 
   window.RockyXCreate = {
     init: init,
     render: render,
+    destroy: destroy,
     setTemplates: setTemplates,
-
-    getState: function () {
-      return {
-        category: state.category,
-        search: state.search,
-        templateCount: state.templates.length
-      };
-    }
+    getState: getState
   };
-})();
+
+})(window, document);
