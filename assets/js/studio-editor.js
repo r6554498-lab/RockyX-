@@ -869,3 +869,29 @@
     saveDraft: saveDraft
   };
 })();
+/* RockyX Effects integration */
+window.RockyXOpenEffects = function (container) {
+  if (!window.RockyXModules) {
+    console.error("RockyX module registry is unavailable.");
+    return;
+  }
+
+  window.RockyXModules.load("effects")
+    .then(function (effectsModule) {
+      effectsModule.init({
+        container: container || document.querySelector("#rockyx-create-root"),
+        onClose: function () {
+          if (window.RockyXStudioEditor &&
+              typeof window.RockyXStudioEditor.init === "function") {
+            window.RockyXStudioEditor.init({
+              container: document.querySelector("#rockyx-create-root")
+            });
+          }
+        }
+      });
+    })
+    .catch(function (error) {
+      console.error("RockyX Effects could not open:", error);
+      alert("RockyX Effects could not open. Please refresh and try again.");
+    });
+};
