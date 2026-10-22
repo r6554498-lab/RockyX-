@@ -1,13 +1,33 @@
 (function (window, document) {
   "use strict";
+  // ==========================================
+  // SECTION 1: CORE REGISTRY
+  // ==========================================
   const modules = new Map();
   const pending = new Map();
   const errors = new Map();
   let manifest = [];
+  // ==========================================
+  // SECTION 2: MANIFEST MANAGEMENT
+  // ==========================================
   function configure(list) {
     if (!Array.isArray(list)) {
       throw new Error("RockyX manifest must be an array.");
     }
+    const names = new Set();
+    list.forEach(function (item) {
+      if (!item.name || !item.src || !item.global) {
+        throw new Error(
+          "Every module needs name, src, and global."
+        );
+      }
+      if (names.has(item.name)) {
+        throw new Error(
+          "Duplicate RockyX module: " + item.name
+        );
+      }
+      names.add(item.name);
+    });
     manifest = list.slice();
     return manifest;
   }
@@ -16,19 +36,28 @@
       return item.name === name;
     });
   }
+  // ==========================================
+  // SECTION 3: MODULE ACCESS
+  // ==========================================
   function get(name) {
     const item = definition(name);
     if (!item) {
-      throw new Error("RockyX module not registered: " + name);
+      throw new Error(
+        "RockyX module not registered: " + name
+      );
     }
     return modules.get(name) ||
       (item.global && window[item.global]) ||
       null;
   }
+  // ==========================================
+  // SECTION 4: MODULE REGISTRATION
+  // ==========================================
   function register(name, module) {
     if (!definition(name)) {
       throw new Error(
-        "Add " + name + " to module-manifest.js first."
+        "Register the module in module-manifest.js first: " +
+        name
       );
     }
     if (!module || typeof module !== "object") {
@@ -38,6 +67,9 @@
     errors.delete(name);
     return module;
   }
+  // ==========================================
+  // SECTION 5: MODULE LOADING
+  // ==========================================
   function load(name) {
     const item = definition(name);
     if (!item) {
@@ -59,7 +91,15 @@
       script.async = true;
       script.dataset.rockyxModule = name;
       script.onload = function () {
-        const module = get(name);
+        let module;
+        try {
+          module = get(name);
+        } catch (error) {
+          errors.set(name, error);
+          pending.delete(name);
+          reject(error);
+          return;
+        }
         if (!module) {
           const error = new Error(
             item.src + " did not export " + item.global
@@ -76,7 +116,7 @@
       };
       script.onerror = function () {
         const error = new Error(
-          "Failed to load RockyX module: " + item.src
+          "Could not load RockyX module: " + item.src
         );
         errors.set(name, error);
         pending.delete(name);
@@ -88,60 +128,76 @@
     pending.set(name, promise);
     return promise;
   }
+  // ==========================================
+  // SECTION 6: BULK MODULE LOADING
+  // ==========================================
   function loadManifest(list) {
-    configure(list);
+    try {
+      configure(list);
+    } catch (error) {
+      return Promise.reject(error);
+    }
     return Promise.all(
       manifest.map(function (item) {
         if (!item.autoLoad) {
-          return Promise.resolve({
+          return {
             name: item.name,
+            loaded: false,
             skipped: true
-          });
+          };
         }
         return load(item.name)
-          .then(function (module) {
+          .then(function () {
             return {
               name: item.name,
-              loaded: true,
-              module: module
+              loaded: true
             };
           })
           .catch(function (error) {
             console.error(
-              "[RockyX] Module failed:",
-              item.name,
+              "[RockyX] Failed to load " + item.name,
               error
             );
             return {
               name: item.name,
               loaded: false,
-              error: error
+              error: error.message
             };
           });
       })
     );
   }
+  // ==========================================
+  // SECTION 7: MODULE INITIALIZATION
+  // ==========================================
   function initialize(name, options) {
     return load(name).then(function (module) {
-      if (typeof module.init === "function") {
-        return Promise.resolve(
-          module.init(options || {})
-        ).then(function () {
-          return module;
-        });
+      if (typeof module.init !== "function") {
+        return module;
       }
-      return module;
+      return Promise.resolve(
+        module.init(options || {})
+      ).then(function () {
+        return module;
+      });
+    }).catch(function (error) {
+      errors.set(name, error);
+      throw error;
     });
   }
+  // ==========================================
+  // SECTION 8: STATUS AND ERROR REPORTING
+  // ==========================================
   function getStatus() {
     return manifest.map(function (item) {
       return {
         name: item.name,
-        source: item.src,
-        loaded: Boolean(
-          modules.has(item.name) ||
-          (item.global && window[item.global])
-        ),
+        src: item.src,
+        loaded: modules.has(item.name) ||
+          Boolean(
+            item.global &&
+            window[item.global]
+          ),
         loading: pending.has(item.name),
         error: errors.has(item.name)
           ? String(errors.get(item.name).message)
@@ -150,11 +206,16 @@
     });
   }
   function retry(name) {
-    pending.delete(name);
+    if (pending.has(name)) {
+      return pending.get(name);
+    }
     modules.delete(name);
     errors.delete(name);
     return load(name);
   }
+  // ==========================================
+  // SECTION 9: PUBLIC REGISTRY API
+  // ==========================================
   window.RockyXModules = {
     configure: configure,
     register: register,
