@@ -606,6 +606,12 @@
                   data-rx-studio-add-text>
             ＋ Text
           </button>
+          
+          <button class="rx-studio-button"
+        type="button"
+        data-rx-studio-effects>
+  ✨ Effects
+</button>
 
           <button class="rx-studio-button"
                   type="button"
