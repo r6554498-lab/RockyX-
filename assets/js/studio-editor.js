@@ -1055,10 +1055,10 @@
   }
 
   function init(options) {
-    const container = options && options.container
-      ? options.container
-      : document.getElementById("rockyx-create-root") ||
-        document.getElementById("page-Studio");
+    const container = (options && options.container) ||
+  document.querySelector("#rockyx-create-root") ||
+  document.querySelector("#page-Studio") ||
+  document.querySelector('[id^="page-Studio"]');
 
     if (!container) {
       console.warn("RockyX Studio: container not found.");
