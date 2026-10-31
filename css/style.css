@@ -1,0 +1,201 @@
+/* =================================
+   ROCKYX DESIGN SYSTEM
+   One World. One Platform.
+================================= */
+
+:root {
+    --background: #09070f;
+    --surface: #110e19;
+    --surface-light: #1a1525;
+
+    --primary: #8b5cf6;
+    --primary-light: #a78bfa;
+    --primary-dark: #6d28d9;
+
+    --text-primary: #ffffff;
+    --text-secondary: #a6a0b3;
+
+    --border: #292335;
+
+    --success: #22c55e;
+    --danger: #ef4444;
+
+    --radius-small: 8px;
+    --radius-medium: 14px;
+    --radius-large: 22px;
+
+    --transition: 0.25s ease;
+}
+
+/* RESET */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--background);
+    color: var(--text-primary);
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+/* APPLICATION */
+
+#rockyx-app {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* HEADER */
+
+#app-header {
+    width: 100%;
+    min-height: 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 24px;
+
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+/* MAIN CONTENT */
+
+#main-content {
+    width: 100%;
+    min-height: 75vh;
+
+    padding: 24px;
+}
+
+#app-screen {
+    width: 100%;
+}
+
+/* TYPOGRAPHY */
+
+h1, h2, h3, h4 {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+p {
+    color: var(--text-secondary);
+}
+
+/* BUTTONS */
+
+button {
+    font: inherit;
+    cursor: pointer;
+
+    border: none;
+    outline: none;
+
+    transition: var(--transition);
+}
+
+button:focus-visible {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 3px;
+}
+
+.primary-button {
+    background: var(--primary);
+    color: white;
+
+    padding: 12px 22px;
+    border-radius: var(--radius-medium);
+}
+
+.primary-button:hover {
+    background: var(--primary-dark);
+}
+
+/* CARDS */
+
+.rockyx-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-large);
+    padding: 20px;
+
+    transition: var(--transition);
+}
+
+.rockyx-card:hover {
+    border-color: var(--primary);
+}
+
+/* NAVIGATION */
+
+#main-navigation {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+    background: var(--surface);
+
+    border-top: 1px solid var(--border);
+
+    padding: 15px;
+}
+
+/* LINKS */
+
+a {
+    color: var(--primary-light);
+    text-decoration: none;
+}
+
+a:hover {
+    color: white;
+}
+
+/* INPUTS */
+
+input, textarea, select {
+    width: 100%;
+
+    padding: 12px;
+
+    background: var(--surface-light);
+    color: white;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
