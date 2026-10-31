@@ -1,36 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta name="theme-color" content="#0b0712">
-    <meta name="description" content="RockyX — One World. One Platform.">
+    <meta name="theme-color" content="#09070f">
+
+    <meta name="description"
+        content="RockyX — One World. One Platform. Discover, create, connect and explore.">
+
+    <meta name="author" content="RockyX">
 
     <title>RockyX — One World. One Platform.</title>
 
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
 
+    <!-- Application -->
     <script src="js/app.js" defer></script>
+
 </head>
 
 <body>
 
     <div id="rockyx-app">
 
-        <header id="app-header"></header>
+        <!-- APPLICATION HEADER -->
+        <header id="app-header">
 
+            <a href="/" class="rockyx-logo" aria-label="RockyX Home">
+                ROCKYX
+            </a>
+
+        </header>
+
+
+        <!-- MAIN APPLICATION CONTENT -->
         <main id="main-content">
+
             <section id="app-screen">
-                <h1>Welcome to RockyX</h1>
-                <p>One World. One Platform.</p>
+
+                <div class="welcome-section">
+
+                    <h1>Welcome to RockyX</h1>
+
+                    <p>One World. One Platform.</p>
+
+                    <button class="primary-button" type="button">
+                        Get Started
+                    </button>
+
+                </div>
+
             </section>
+
         </main>
 
+
+        <!-- PRIMARY NAVIGATION -->
         <nav id="main-navigation" aria-label="Main navigation">
+
+            <button type="button" data-page="home">
+                Home
+            </button>
+
+            <button type="button" data-page="discover">
+                Discover
+            </button>
+
+            <button type="button" data-page="create">
+                Create
+            </button>
+
+            <button type="button" data-page="inbox">
+                Inbox
+            </button>
+
+            <button type="button" data-page="profile">
+                Profile
+            </button>
+
         </nav>
 
     </div>
 
 </body>
+
 </html>
